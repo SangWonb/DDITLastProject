@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.member.dao.MemberDAO">
+	<resultMap type="MemberVO" id="memberMap" autoMapping="true">
+		<id property="memNo" column="MEM_NO"/>
+		<collection property="memRoles" ofType="string">
+			<result column="MEM_ROLE"/>
+		</collection>
+		<discriminator javaType="string" column="mem_type">
+			<case value="STUDENT" resultMap="stuMap">
+			</case>
+			<case value="PROFESSOR" resultMap="proMap"></case>
+			<case value="MANAGER" resultMap="manMap"></case>
+		</discriminator>
+	</resultMap>
+	
+	<resultMap type="MemberVO" id="memMap" autoMapping="true">
+		<id property="memNo" column="MEM_NO"/>
+		<collection property="memRoles" ofType="string">
+			<result column="MEM_ROLE"/>
+		</collection>
+	</resultMap>
+	
+	<resultMap type="StudentVO" id="stuMap" extends="memMap" autoMapping="true">
+		<id property="smemNo" column="smem_no"/>
+		<result property="deptCode" column="sdept_code"/>
+		<result property="deptName" column="sdept_name"/>
+	</resultMap>
+	<resultMap type="ProfessorVO" id="proMap" extends="memMap" autoMapping="true">
+		<id property="pmemNo" column="pmem_no"/>
+		<result property="deptCode" column="pdept_code"/>
+		<result property="deptName" column="pdept_name"/>
+	</resultMap>
+	<resultMap type="ManagerVO" id="manMap" extends="memMap" autoMapping="true">
+		<id property="mmemNo" column="mmem_no"/>
+	</resultMap>
+	
+	
+	<select id="selectMemberByUsername" parameterType="string" resultMap="memberMap">
+		WITH STUVIEW AS (
+		    SELECT 
+		        S.smem_no,S.dept_code,S.smem_semester,S.stu_mnl,S.stu_mcl,
+		        S.stu_cnl,S.stu_ccl,S.stu_joinyear,S.stu_record,S.stu_gestatus,
+		        S.stu_gtstatus,S.stu_enrollno,S.stu_yn,
+		        D.dept_name
+		    FROM STUDENT S left outer join DEPARTMENT D on (S.dept_code = D.dept_code)
+		    WHERE S.smem_no = #{memNo}	
+		), PROVIEW AS(
+		    SELECT 
+		        P.pmem_no,P.dept_code,P.start_date,P.pmem_status,
+		        P.pmem_position,P.pmem_resp,P.pmem_ta,
+		        D.dept_name
+		    FROM PROFESSOR P left outer join DEPARTMENT D on (p.dept_code = D.dept_code)
+		    WHERE P.pmem_no = #{memNo}	
+		)
+		SELECT
+		    M.mem_no,M.mem_name,M.mem_pass,M.mem_tel,M.mem_addr1,
+		    M.mem_addr2,M.mem_email,M.mem_reg1,M.mem_reg2,M.mem_bank,
+		    M.mem_depo,M.mem_banknum,M.gf_no,M.mem_schedule,
+		    R.mem_role,
+		    case 
+		    when SV.smem_no is not null then 'STUDENT'
+		    when PV.pmem_no is not null then 'PROFESSOR'
+		    else 'MANAGER'
+		    end as mem_type,
+		    MM.mmem_no,MM.mmem_state,
+		    SV.*,SV.DEPT_CODE as SDEPT_CODE, SV.DEPT_NAME as SDEPT_NAME,
+            PV.*,PV.DEPT_CODE as PDEPT_CODE, PV.DEPT_NAME as PDEPT_NAME
+		FROM
+		    member M 
+		    LEFT OUTER JOIN mem_roles R on (M.mem_no = R.mem_no)
+		    left outer join STUVIEW SV on (M.mem_no = SV.smem_no)
+		    left outer join PROVIEW PV  on (M.mem_no = PV.pmem_no)
+		    left outer join manager MM on (M.mem_no = MM.mmem_no)
+		WHERE M.mem_no = #{memNo}	
+	</select>
+	
+	<select id="selectMemberList" resultType="MemberVO">
+		SELECT
+		    mem_no,mem_name,mem_pass,mem_tel,mem_addr1,
+		    mem_addr2,mem_email,mem_reg1,mem_reg2,mem_bank,
+		    mem_depo,mem_banknum,gf_no
+		FROM
+		    member
+		ORDER BY mem_no
+	</select>
+	
+	
+	<select id="findMember" parameterType="map" resultType="MemberVO">
+		SELECT
+		    mem_no,mem_name,mem_pass,mem_tel,mem_addr1,mem_addr2,mem_email,
+		    mem_reg1,mem_reg2,mem_bank,mem_depo,mem_banknum,gf_no
+		FROM
+		    member
+		WHERE 
+		    <if test="findInfo.authMethod eq 'authPhone'">
+			    mem_name = #{findInfo.PmemName} 
+			    and mem_reg1= #{findInfo.memReg1} 
+			    and mem_tel = #{findInfo.memTel} 	    
+		    </if>
+		    <if test="findInfo.authMethod eq 'authEmail'">
+			    mem_name = #{findInfo.EmemName} 
+			    and mem_email = #{findInfo.memEmail}     
+		    </if>
+	</select>
+	
+	<select id="findMemberPW" parameterType="map" resultType="MemberVO">
+		SELECT
+		    mem_no,mem_name,mem_pass,mem_tel,mem_addr1,mem_addr2,mem_email,
+		    mem_reg1,mem_reg2,mem_bank,mem_depo,mem_banknum,gf_no
+		FROM
+		    member
+		WHERE 
+		    <if test="findInfo.authMethod eq 'authPhone'">
+			    mem_no = #{findInfo.PmemNo} 
+			    and mem_reg1= #{findInfo.memReg1}
+			    and mem_tel = #{findInfo.memTel} 	    
+		    </if>
+		    <if test="findInfo.authMethod eq 'authEmail'">
+			    mem_no = #{findInfo.EmemNo} 
+			    and mem_email = #{findInfo.memEmail}     
+		    </if>
+	</select>
+	
+	<insert id="pwReset" parameterType="MemberVO">
+		UPDATE member
+		SET
+		    mem_pass = #{memPass}
+		WHERE
+		    mem_no = #{memNo}
+	</insert>
+	
+</mapper>

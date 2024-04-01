@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN" "http://tiles.apache.org/dtds/tiles-config_3_0.dtd" >
+<tiles-definitions>
+  <!-- 상속의 개념(부모) -->
+  
+<!-- 로그인 -->
+	<definition name="parent_login" template="/WEB-INF/loginLayout.jsp">
+		<put-attribute name="title" value="Company"/>
+	  	<put-attribute name="preScript" value="/WEB-INF/includee/preScript.jsp"/>
+	  	<put-attribute name="footerMenu" value="/WEB-INF/includee/footerMenu.jsp"/>
+	  	<put-attribute name="postScript" value="/WEB-INF/includee/postScript.jsp"/>
+	</definition>    
+  
+<!-- 메인홈페이지 -->
+    <definition name="parent_main" template="/WEB-INF/mainPageLayout.jsp">
+		<put-attribute name="title" value="Company"/>
+	  	<put-attribute name="preScript" value="/WEB-INF/includee/preScript.jsp"/>
+	  	<put-attribute name="headerMenuMainPage" value="/WEB-INF/includee/headerMenuMainPage.jsp"/>
+	  	<put-attribute name="footerMenu" value="/WEB-INF/includee/footerMenuMainPage.jsp"/>
+	  	<put-attribute name="postScript" value="/WEB-INF/includee/postScript.jsp"/>
+	</definition>
+	
+<!-- 커뮤니티 -->
+    <definition name="parent_community" template="/WEB-INF/communityLayout.jsp">
+		<put-attribute name="title" value="Company"/>
+	  	<put-attribute name="preScript" value="/WEB-INF/includee/preScript.jsp"/>
+	  	<put-attribute name="headerMenuMainPage" value="/WEB-INF/includee/headerMenuMainPage.jsp"/>
+	  	<put-attribute name="bodyCommunity" value="/WEB-INF/includee/bodyCommunity.jsp"/>
+	  	<put-attribute name="footerMenu" value="/WEB-INF/includee/footerMenuMainPage.jsp"/>
+	  	<put-attribute name="postScript" value="/WEB-INF/includee/postScript.jsp"/>
+	</definition>
+	
+<!-- 통합정보시스템 공통 -->	
+	<definition name="parent_common" template="/WEB-INF/infoLayout.jsp">
+		<put-attribute name="title" value="Company"/>
+	  	<put-attribute name="preScript" value="/WEB-INF/includee/preScript.jsp"/>
+	  	<put-attribute name="headerMenu" value="/WEB-INF/includee/headerMenuInfo.jsp"/>
+	  	<put-attribute name="leftMenu" value="/WEB-INF/includee/leftMenuS.jsp"/>
+	  	<put-attribute name="postScript" value="/WEB-INF/includee/postScript.jsp"/>
+	  	<put-attribute name="beforeContent" value="/WEB-INF/includee/beforeContent.jsp"/>
+	</definition>
+	
+<!-- 통합정보시스템 -->
+	<definition name="parent_student" template="/WEB-INF/infoLayout.jsp">
+		<put-attribute name="title" value="Company"/>
+	  	<put-attribute name="preScript" value="/WEB-INF/includee/preScript.jsp"/>
+	  	<put-attribute name="headerMenu" value="/WEB-INF/includee/headerMenuInfo.jsp"/>
+	  	<put-attribute name="leftMenu" value="/WEB-INF/includee/leftMenuS.jsp"/>
+	  	<put-attribute name="postScript" value="/WEB-INF/includee/postScript.jsp"/>
+	  	<put-attribute name="beforeContent" value="/WEB-INF/includee/beforeContent.jsp"/>
+	</definition>
+	<definition name="parent_professor" template="/WEB-INF/infoLayout.jsp">
+		<put-attribute name="title" value="Company"/>
+	  	<put-attribute name="preScript" value="/WEB-INF/includee/preScript.jsp"/>
+	  	<put-attribute name="headerMenu" value="/WEB-INF/includee/headerMenuInfo.jsp"/>
+	  	<put-attribute name="leftMenu" value="/WEB-INF/includee/leftMenuP.jsp"/>
+	  	<put-attribute name="postScript" value="/WEB-INF/includee/postScript.jsp"/>
+	  	<put-attribute name="beforeContent" value="/WEB-INF/includee/beforeContent.jsp"/>
+	</definition>
+	<definition name="parent_manager" template="/WEB-INF/infoLayout.jsp">
+		<put-attribute name="title" value="Company"/>
+	  	<put-attribute name="preScript" value="/WEB-INF/includee/preScript.jsp"/>
+	  	<put-attribute name="headerMenu" value="/WEB-INF/includee/headerMenuInfo.jsp"/>
+	  	<put-attribute name="leftMenu" value="/WEB-INF/includee/leftMenuM.jsp"/>
+	  	<put-attribute name="postScript" value="/WEB-INF/includee/postScript.jsp"/>
+	  	<put-attribute name="beforeContent" value="/WEB-INF/includee/beforeContent.jsp"/>
+	</definition>
+	
+<!-- 증명서 -->
+	<definition name="parent_certificate" template="/WEB-INF/certificateLayout.jsp">
+		<put-attribute name="title" value="Company"/>
+	  	<put-attribute name="preScript" value="/WEB-INF/includee/preScript.jsp"/>
+	  	<put-attribute name="postScript" value="/WEB-INF/includee/postScript.jsp"/>
+	</definition>  
+
+<!-- 사이버캠퍼스 메인 페이지 -->
+	<definition name="parent_studentCM" template="/WEB-INF/cyberMainLayout.jsp">
+		<put-attribute name="title" value="Company"/>
+	  	<put-attribute name="preScript" value="/WEB-INF/includee/preScript.jsp"/>
+	  	<put-attribute name="headerMenu" value="/WEB-INF/includee/headerMenu.jsp"/>
+	  	<put-attribute name="postScript" value="/WEB-INF/includee/postScript.jsp"/>
+	  	<put-attribute name="beforeContent" value="/WEB-INF/includee/beforeContent.jsp"/>
+	</definition>
+	<definition name="parent_professorCM" template="/WEB-INF/cyberMainLayout.jsp">
+		<put-attribute name="title" value="Company"/>
+	  	<put-attribute name="preScript" value="/WEB-INF/includee/preScript.jsp"/>
+	  	<put-attribute name="headerMenu" value="/WEB-INF/includee/headerMenu.jsp"/>
+	  	<put-attribute name="postScript" value="/WEB-INF/includee/postScript.jsp"/>
+	  	<put-attribute name="beforeContent" value="/WEB-INF/includee/beforeContent.jsp"/>
+	</definition>
+
+<!-- 사이버캠퍼스 -->
+	<definition name="parent_studentC" template="/WEB-INF/cyberLayout.jsp">
+		<put-attribute name="title" value="Company"/>
+	  	<put-attribute name="preScript" value="/WEB-INF/includee/preScript.jsp"/>
+	  	<put-attribute name="headerMenu" value="/WEB-INF/includee/headerMenu.jsp"/>
+	  	<put-attribute name="leftMenu" value="/WEB-INF/includee/leftMenuCyberS.jsp"/>
+	  	<put-attribute name="postScript" value="/WEB-INF/includee/postScript.jsp"/>
+	  	<put-attribute name="beforeContent" value="/WEB-INF/includee/beforeContent.jsp"/>
+	</definition>
+	<definition name="parent_professorC" template="/WEB-INF/cyberLayout.jsp">
+		<put-attribute name="title" value="Company"/>
+	  	<put-attribute name="preScript" value="/WEB-INF/includee/preScript.jsp"/>
+	  	<put-attribute name="headerMenu" value="/WEB-INF/includee/headerMenu.jsp"/>
+	  	<put-attribute name="leftMenu" value="/WEB-INF/includee/leftMenuCyberP.jsp"/>
+	  	<put-attribute name="postScript" value="/WEB-INF/includee/postScript.jsp"/>
+	  	<put-attribute name="beforeContent" value="/WEB-INF/includee/beforeContent.jsp"/>
+	</definition>
+	
+<!-- 경력개발시스템 -->
+	<definition name="parent_studentUp" template="/WEB-INF/careerupLayout.jsp">
+		<put-attribute name="title" value="Company"/>
+	  	<put-attribute name="preScript" value="/WEB-INF/includee/preScript.jsp"/>
+	  	<put-attribute name="headerMenu" value="/WEB-INF/includee/headerMenuCareerup.jsp"/>
+	  	<put-attribute name="leftMenu" value="/WEB-INF/includee/leftMenuCareerupS.jsp"/>
+	  	<put-attribute name="postScript" value="/WEB-INF/includee/postScript.jsp"/>
+	  	<put-attribute name="beforeContent" value="/WEB-INF/includee/beforeContent.jsp"/>
+	</definition>
+	
+<!-- 오늘의메뉴 -->
+	<definition name="parent_food" template="/WEB-INF/foodLayout.jsp">
+		<put-attribute name="title" value="Company"/>
+	  	<put-attribute name="preScript" value="/WEB-INF/includee/preScript.jsp"/>
+	  	<put-attribute name="headerMenu" value="/WEB-INF/includee/headerMenu.jsp"/>
+	  	<put-attribute name="leftMenu" value="/WEB-INF/includee/leftMenuFood.jsp"/>
+	  	<put-attribute name="postScript" value="/WEB-INF/includee/postScript.jsp"/>
+	  	<put-attribute name="beforeContent" value="/WEB-INF/includee/beforeContent.jsp"/>
+	</definition>
+	
+<!-- 웹메일 -->
+	<definition name="parent_email" template="/WEB-INF/emailLayout.jsp">
+		<put-attribute name="title" value="Company"/>
+	  	<put-attribute name="preScript" value="/WEB-INF/includee/preScript.jsp"/>
+	  	<put-attribute name="headerMenu" value="/WEB-INF/includee/headerMenu.jsp"/>
+	  	<put-attribute name="leftMenu" value="/WEB-INF/includee/leftMenuEmail.jsp"/>
+	  	<put-attribute name="postScript" value="/WEB-INF/includee/postScript.jsp"/>
+	  	<put-attribute name="beforeContent" value="/WEB-INF/includee/beforeContent.jsp"/>
+	</definition>
+	
+
+</tiles-definitions>

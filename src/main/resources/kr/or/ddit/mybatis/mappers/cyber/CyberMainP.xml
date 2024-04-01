@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.professor.cyber.dao.CyberMainDAOP">
+
+	<resultMap type="LecOpenListVO" id="cyberlolMap" autoMapping="true">
+		<id property="lolCode" column="lol_code"/>
+		<collection property="lectureTimeList" javaType="list" ofType="LectureTimeVO" autoMapping="true">
+			<id property="lolCode" column="lol_code"/>
+			<id property="ltDay" column="lt_day"/>
+		</collection>
+	</resultMap>
+
+	<select id="selectLOLListP" resultMap="cyberlolMap" parameterType="map">
+		SELECT
+		    LL.lol_code,LL.sub_code,LL.lol_limit,LL.lol_saved,LL.lol_daycount,
+		    LL.lol_appno,LL.room_no,LL.pmem_no,LL.lec_appno,LL.app_status,
+		    LL.app_reject,LL.lol_name,
+		    LT.lol_code,LT.lt_day,LT.lt_time,
+            S.SUB_SCHYEAR
+		FROM lec_open_list LL 
+            LEFT OUTER JOIN lecture_time LT on (LL.lol_code = LT.lol_code)
+            LEFT OUTER JOIN subject S on (LL.sub_code = S.sub_code)
+		WHERE LL.pmem_no = #{pmemNo,jdbcType=VARCHAR}
+            AND  S.sub_semester = #{signUp.semester}
+            AND  LL.app_status = 'STA06'
+		    AND  EXTRACT(YEAR FROM LL.lec_appno) = #{signUp.year}
+	</select>
+	
+	<resultMap type="LectureVO" id="lecMap" autoMapping="true">
+		<id property="lecCode" column="lec_code"/>
+		<association property="lol" javaType="LecOpenListVO" autoMapping="true" >
+			<id property="lolCode" column="lol_code"/>
+		</association>
+	</resultMap>
+	
+	<select id="selectLectureListP" parameterType="Map" resultMap="lecMap">
+		WITH lecList AS(
+			SELECT
+			    L.lec_code,L.lol_code,L.lec_time,L.gf_no,L.building_no,L.room_no,
+			    LOL.sub_code,LOL.lol_limit,LOL.lol_saved,LOL.lol_daycount,LOL.lol_appno,
+			    LOL.pmem_no,LOL.lec_appno,LOL.app_status,LOL.app_reject,LOL.lol_name
+			FROM
+			    lecture L 
+			    	left outer join lec_open_list LOL on (L.lol_code = LOL.lol_code)
+			    	LEFT OUTER JOIN subject S on (LOL.sub_code = S.sub_code)
+			WHERE LOL.pmem_no = #{pmemNo,jdbcType=VARCHAR}
+			AND  S.sub_semester = #{signUp.semester}
+			AND  LOL.app_status = 'STA06'
+		    AND  EXTRACT(YEAR FROM LOL.lec_appno) = #{signUp.year}
+			ORDER BY LOL.app_status, LOL.lol_name
+		), lecRnum AS(
+			SELECT ROWNUM RNUM,lecList.* 
+			FROM lecList
+		)
+		SELECT *
+		FROM lecRnum
+		<![CDATA[
+	      WHERE RNUM >= #{paging.startRow} AND RNUM <= #{paging.endRow}
+	   ]]>
+	</select>
+	
+	<select id="selectTotalRecord" parameterType="map" resultType="int">
+		select count(*)
+		from lecture L 
+			left outer join lec_open_list LOL on (L.lol_code = LOL.lol_code)
+			LEFT OUTER JOIN subject S on (LOL.sub_code = S.sub_code)
+		where LOL.pmem_no = #{pmemNo,jdbcType=VARCHAR}
+		AND  S.sub_semester = #{signUp.semester}
+		AND  LOL.app_status = 'STA06'
+	    AND  EXTRACT(YEAR FROM LOL.lec_appno) = #{signUp.year}
+	</select>
+
+</mapper>

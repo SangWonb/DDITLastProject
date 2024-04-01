@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.careerup.mentoring.mentoringmentee.dao.StudentForSenior">
+<update id="updateMentor" parameterType="StudentVO">
+	UPDATE STUDENT
+      SET
+         STU_YN = #{stuYn},
+         GF_NO = #{gfNo,jdbcType=VARCHAR}
+      WHERE SMEM_NO = #{smemNo}
+</update>
+</mapper>

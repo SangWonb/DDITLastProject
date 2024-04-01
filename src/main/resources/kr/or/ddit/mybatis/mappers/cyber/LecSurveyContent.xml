@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.cyber.lectureevaluation.dao.LecSurveyContentDAO">
+	
+	<select id="selectLSCList" resultType="LecSurveyContentVO">
+		SELECT
+		    ls_no,
+		    ls_type,
+		    ls_content
+		FROM
+		    lec_survey_content
+		ORDER BY LS_NO
+	</select>
+	
+</mapper>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.book.dao.BookDAOC">
+
+	<sql id="searchFrag">
+		<trim prefix="WHERE" suffixOverrides="AND">
+			<if test="not detailCondition.empty">
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.bookName)">
+					INSTR(BOOK_NAME, #{detailCondition.bookName}) > 0 AND 
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.bookWriter)">
+					BOOK_WRITER = #{detailCondition.bookWriter} AND   
+				</if>
+			</if>
+		</trim>
+	</sql>
+
+	<select id="selectTotalRecord" resultType="int" parameterType="kr.or.ddit.utils.paging.PaginationInfo">
+		SELECT COUNT(*)
+		FROM BOOK
+		<include refid="searchFrag" />
+	</select>
+	
+	<select id="selectBookList" resultType="BookVO" parameterType="kr.or.ddit.utils.paging.PaginationInfo">
+		SELECT B.*
+		FROM(
+		    SELECT ROWNUM RNUM, A.*
+		    FROM(
+		        SELECT BOOK_CODE, BOOK_NAME, BOOK_WRITER
+		            , BOOK_COMPANY, BOOK_CATEGORY
+		            , BOOK_STATE
+		        FROM BOOK
+		        <include refid="searchFrag" />
+		        ORDER BY BOOK_CODE DESC
+		    ) A
+		) B
+		<![CDATA[
+			WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+		]]>
+	</select>
+	
+	<select id="selectBook" resultType="BookVO" parameterType="string">
+		SELECT BOOK_CODE, BOOK_NAME, BOOK_WRITER, BOOK_COMPANY, BOOK_CATEGORY, BOOK_STATE, BOOK_CONTENT
+		FROM BOOK
+		WHERE BOOK_CODE = #{BOOK_CODE}
+	</select>
+
+</mapper>

@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.manager.pro.lecture.dao.LectureDecisionDAOM">
+	<resultMap type="LecOpenListVO" id="lecApplList" autoMapping="true">
+		<id property = "lolAppno" column="LOL_APPNO"/>
+		<association property="subject" javaType="hashmap">
+			<result property="subCode" column="SUB_CODE"/>
+			<result property="statusCode" column="STATUS_CODE"/>
+			<result property="subName" column="SUB_NAME"/>
+			<result property="subSchyear" column="SUB_SCHYEAR"/>
+			<result property="majorCultural" column="MAJOR_CULTURAL"/>
+			<result property="choiceRequire" column="CHOICE_REQUIRE"/>
+			<result property="subSaved" column="SUB_SAVED"/>
+			<result property="subCredit" column="SUB_CREDIT"/>
+			<result property="subSemester" column="SUB_SEMESTER"/>
+			<result property="deptCode" column="DEPT_CODE"/>
+			<result property="deptName" column="DEPT_NAME"/>
+		</association>
+		<association property="status" javaType="hashmap">
+			<result property="statusCode" column="STATUS_CODE"/>
+			<result property="statusNm" column="STATUS_NM"/>
+		</association>
+		<association property="reject" javaType="hashmap">
+	       	<result property="rejectCode" column="REJECT_CODE"/>
+	       	<result property="rejectReason" column="REJECT_REASON"/>
+	   	</association>
+		<association property="lecturePlan" javaType="LecturePlanVO" autoMapping="true">
+		<id property="lpCode" column="LP_CODE"/> 
+			<collection property="lectureContent" ofType="LectureContentVO" javaType="list" autoMapping="false">
+				<id property="lpNo" column="LP_NO"/>
+<!-- 				<result property="lpCode" column="LP_CODE"/> -->
+			<result property="lpContent" column="LP_CON"/>
+		</collection>
+   	</association>
+</resultMap>
+<select id="selectLectureDecisionList" resultMap="lecApplList" parameterType="String">
+		SELECT 
+			LEC.SUB_CODE, LEC.LOL_LIMIT, LEC.LOL_SAVED
+			, LEC.LOL_DAYCOUNT, LEC.lol_appno, LEC.ROOM_NO, LEC.PMEM_NO, M.MEM_NAME
+			, LEC.LEC_APPNO, LEC.APP_STATUS, LEC.APP_REJECT, LEC.LOL_NAME
+	        , R.REJECT_REASON, s.status_nm, s.status_code
+	        , D.DEPT_NAME, SUB.DEPT_CODE, M.MEM_NAME
+	        , SUB.SUB_SEMESTER, SUB.SUB_SCHYEAR, D.DEPT_NAME, SUB.MAJOR_CULTURAL
+	        , SUB.CHOICE_REQUIRE, SUB.SUB_CREDIT, SUB.SUB_NAME
+	        , P.LP_CODE, P.LP_CONTENT, P.LP_ATTEND_REF, P.LP_TEST_REF
+			, P.LP_TASK_REF, P.LP_NOTE, P.LP_BOOK
+		
+		, C.LP_CONTENT as LP_CON, C.LP_NO
+		FROM LEC_OPEN_LIST lec
+			LEFT JOIN SUBJECT sub ON lec.SUB_CODE = sub.SUB_CODE
+			LEFT JOIN DEPARTMENT D ON sub.dept_code = D.dept_code
+		    LEFT JOIN STATUS S ON lec.app_status = S.STATUS_CODE
+		   	LEFT JOIN REJECT R ON lec.app_reject = R.REJECT_CODE
+		   	INNER JOIN MEMBER M ON lec.PMEM_NO = M.MEM_NO
+		   	LEFT JOIN LECTURE_PLAN P ON P.LOL_APPNO = LEC.LOL_APPNO
+	   		LEFT JOIN LECTURE_CONTENT C ON C.LP_CODE = P.LP_CODE
+		WHERE lec.app_status = 'STA02'
+</select>
+<select id="selectLectureAppl" resultMap="lecApplList" parameterType="String">
+	SELECT 
+		LEC.SUB_CODE, LEC.LOL_LIMIT, LEC.LOL_SAVED
+		, LEC.LOL_DAYCOUNT, LEC.lol_appno, LEC.ROOM_NO, LEC.PMEM_NO, M.MEM_NAME
+		, LEC.LEC_APPNO, LEC.APP_STATUS, LEC.APP_REJECT, LEC.LOL_NAME
+        , R.REJECT_REASON, s.status_nm, s.status_code
+        , D.DEPT_NAME, SUB.DEPT_CODE, M.MEM_NAME
+        , SUB.SUB_SEMESTER, SUB.SUB_SCHYEAR, D.DEPT_NAME, SUB.MAJOR_CULTURAL
+        , SUB.CHOICE_REQUIRE, SUB.SUB_CREDIT
+        
+        , P.LP_CODE, P.LP_CONTENT, P.LP_ATTEND_REF, P.LP_TEST_REF
+		, P.LP_TASK_REF, P.LP_NOTE, P.LP_BOOK
+		
+		, C.LP_CONTENT as LP_CON, C.LP_NO
+	FROM LEC_OPEN_LIST lec
+		LEFT JOIN SUBJECT sub ON SUB.SUB_CODE = LEC.SUB_CODE
+		LEFT JOIN DEPARTMENT D ON SUB.dept_code = D.dept_code
+	    LEFT JOIN STATUS S ON sub.status_code = S.STATUS_CODE
+	   	LEFT JOIN REJECT R ON sub.reject_code = R.REJECT_CODE
+	   	LEFT JOIN MEMBER M ON SUB.PMEM_NO = M.MEM_NO
+	   	LEFT JOIN LECTURE_PLAN P ON P.LOL_APPNO = LEC.LOL_APPNO
+	   	LEFT JOIN LECTURE_CONTENT C ON C.LP_CODE = P.LP_CODE
+	WHERE lec.LOL_APPNO = #{lolAppno}
+	order by LP_NO asc
+</select>
+<update id="lectureDecisionUpdate" parameterType="LecOpenListVO">
+	UPDATE LEC_OPEN_LIST 
+	SET
+		APP_STATUS = #{appStatus,jdbcType=VARCHAR},
+		APP_REJECT = #{appReject,jdbcType=VARCHAR}
+	WHERE LOL_APPNO = #{lolAppno}
+</update>
+
+<update id="insertLolAppno" parameterType="LecOpenListVO">
+	<selectKey order="BEFORE" keyProperty="lolCode" resultType="String">
+	SELECT 
+	    'LOL' || TO_CHAR(SYSDATE, 'YYMMDD') || LPAD(NVL(MAX(TO_NUMBER(SUBSTR(LOL_CODE, 10))) + 1, 1), 3, '0')
+	FROM 
+    LEC_OPEN_LIST
+	</selectKey>
+	 UPDATE 
+      	LEC_OPEN_LIST
+	  SET 
+      	LOL_CODE=#{lolCode}
+	  WHERE 
+	    LOL_APPNO = #{lolAppno}
+</update>
+
+<insert id="insertNewLecture" parameterType="LectureVO">
+	<selectKey order="BEFORE" keyProperty="lecCode" resultType="String">
+		SELECT 'LEC' || LPAD(TO_CHAR(NVL(MAX(TO_NUMBER(SUBSTR(LEC_CODE, 4))), 0) + 1), 3, '0') 
+		FROM LECTURE
+	</selectKey>
+    INSERT INTO LECTURE (
+        LEC_CODE,
+        LOL_CODE,
+        LEC_TIME,
+        BUILDING_NO,
+        ROOM_NO
+    ) VALUES (
+        #{lecCode,jdbcType=VARCHAR},
+        #{lolCode,jdbcType=VARCHAR},
+        #{lecTime,jdbcType=NUMERIC},
+        #{buildingNo,jdbcType=VARCHAR},
+        #{roomNo,jdbcType=VARCHAR}
+    )
+</insert>
+
+<update id="updateLecturePlan" parameterType="LecturePlanVO">
+	 UPDATE 
+      	LECTURE_PLAN
+	  SET 
+      	LOL_CODE=#{lolCode}
+	  WHERE 
+	    LOL_APPNO = #{lolAppno}
+</update>
+<insert id="insertLectureTime" parameterType="LectureTimeVO">
+	INSERT INTO LECTURE_TIME (
+		LOL_CODE,
+		LT_DAY,
+		LT_TIME
+	)VALUES (
+        #{lolCode,jdbcType=VARCHAR},
+        #{ltDay,jdbcType=VARCHAR},
+        #{ltTime,jdbcType=VARCHAR}
+    )
+</insert>
+</mapper>
+
+
+

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.careerup.mentoring.dao.MentoringMessageDAO">
+
+<select id="selectChatMessageList" resultType="MentoringMessageVO" parameterType="String">
+SELECT c.chat_message, c.chat_Time, c.MEM_NO, m.MEM_NAME
+	FROM MENTORING_MESSAGE c
+    inner join member m on m.mem_NO = c.MEM_NO
+	WHERE c.CHAT_ID = #{chatId}
+	order by c.chat_time
+</select>
+<insert id="insertChatMessage" parameterType="MentoringMessageVO">
+	INSERT INTO MENTORING_MESSAGE (
+		CHAT_ID,
+		MEM_NO,
+		CHAT_MESSAGE,
+		CHAT_TIME
+	) VALUES (
+		#{chatId}
+		, #{memNo}
+		, #{chatMessage}
+		, SYSDATE
+	)
+</insert>
+</mapper>

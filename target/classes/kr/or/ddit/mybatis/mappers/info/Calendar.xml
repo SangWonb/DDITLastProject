@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.info.calendar.dao.CalendarDAO">
+	<select id="selectScheduleA" resultType="CalendarVO">
+		SELECT
+		    cldr_code,
+		    cldr_type,
+		    Mem_no,
+		    cldr_memo,
+		    cldr_start,
+		    Cldr_end,
+		    cldr_color,
+		    dept_code
+		FROM
+		    calendar
+		WHERE 
+		    CLDR_CODE LIKE 'A%'
+	</select>
+	<select id="selectScheduleD" parameterType="String" resultType="CalendarVO" >
+		SELECT
+		    A.cldr_code,
+		    A.cldr_type,
+		    A.mem_no,
+		    A.cldr_memo,
+		    A.cldr_start,
+		    A.Cldr_end,
+		    A.cldr_color,
+		    A.dept_code
+		FROM
+		    calendar A
+		join 
+		    student d on d.dept_code = A.dept_code
+		where 
+		    A.dept_code = 'D'|| SUBSTR(#{memNo},5,2)		
+	</select>
+	<select id="selectScheduleM" parameterType="String" resultType="CalendarVO">
+		SELECT
+		    cldr_code,
+		    cldr_type,
+		    Mem_no,
+		    cldr_memo,
+		    cldr_start,
+		    Cldr_end,
+		    cldr_color,
+		    dept_code
+		FROM
+		    calendar
+		where 
+		    mem_no = #{memNo}
+		and 
+		    cldr_code like 'M%'
+	</select>
+	<insert id="insertSchedule" parameterType="CalendarVO">
+		<selectKey order="BEFORE" keyProperty="cldrCode" keyColumn="CLDR_CODE" resultType="String"  >
+			<if  test="#{category eq 'a'}">
+				SELECT 
+				    'A'|| TO_CHAR(SYSDATE, 'YYYY') || 
+				    LPAD(MAX(TO_NUMBER(SUBSTR((SELECT MAX(CLDR_CODE) FROM CALENDAR WHERE CLDR_CODE LIKE 'A%'), 6))) + 1, 5, '0')
+				FROM 
+				    DUAL
+			</if>
+			<if test="#{category eq 'm'}">
+				SELECT 
+				    'M'||#{memNo} || 
+				    LPAD(MAX(TO_NUMBER(SUBSTR((SELECT MAX(CLDR_CODE) FROM CALENDAR WHERE CLDR_CODE LIKE 'M'||#{memNo}||'%'), 11))) + 1, 5, '0')
+				FROM 
+				    DUAL
+			</if>
+			<if test="#{category eq 'd'}">
+				SELECT 
+				    #{deptCode}|| TO_CHAR(SYSDATE, 'YYYY') || 
+				    LPAD(MAX(TO_NUMBER(SUBSTR((SELECT MAX(CLDR_CODE) FROM CALENDAR WHERE CLDR_CODE LIKE {deptCode}||'%'), 8))) + 1, 4, '0')
+				FROM 
+				    DUAL
+			</if>
+		</selectKey>
+		INSERT INTO calendar (
+		    cldr_code,
+		    mem_no,
+		    cldr_memo,
+		    cldr_start,
+		    cldr_end,
+		    cldr_color,
+		    dept_code
+		) VALUES (
+			#{cldrCode},
+			#{memNo},
+			#{cldrStart},
+			#{cldrEnd},
+			#{cldrColor},
+			#{deptCode}
+		)
+	</insert>
+
+
+</mapper>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.manager.stu.mentor.dao.MentorApplListDAOM">
+
+ <resultMap type="StudentVO" id="studentFile" autoMapping="true">
+	<id property="smemNo" column="smem_no"/>
+	<collection property="fileList" javaType="list" ofType="FileVO" autoMapping="true">
+		<id property="fileNo" column="file_no"/>
+	</collection>
+</resultMap>
+
+<select id="selectMetorApplList" resultMap="studentFile">
+	SELECT S.SMEM_NO, S.DEPT_CODE, S.GF_NO
+		, D.DEPT_NAME
+		, M.MEM_NAME
+		,F.file_no,F.file_nm,F.file_save,F.mime,F.file_size,F.fancy_size,F.gf_no
+	FROM STUDENT S
+	INNER JOIN DEPARTMENT D ON S.DEPT_CODE = D.DEPT_CODE
+	INNER JOIN MEMBER M ON M.MEM_NO = S.SMEM_NO
+	LEFT OUTER JOIN "FILE" F on S.gf_no = F.gf_no
+	WHERE STU_YN = 'M'
+</select>
+
+<select id="selectMetorAppl" resultMap="studentFile" parameterType="String">
+	SELECT S.SMEM_NO, S.DEPT_CODE, S.GF_NO
+		, D.DEPT_NAME
+		, M.MEM_NAME
+	FROM STUDENT S
+	INNER JOIN DEPARTMENT D ON S.DEPT_CODE = D.DEPT_CODE
+	INNER JOIN MEMBER M ON M.MEM_NO = S.SMEM_NO
+	WHERE S.SMEM_NO = #{smemNo}
+</select>
+
+<insert id="insertMentorAppl" parameterType="SeniorCoworkerVO">
+<selectKey order="BEFORE" keyProperty="srNo" resultType="String">
+	SELECT 'SR' || LPAD(TO_CHAR(NVL(MAX(TO_NUMBER(SUBSTR(sr_no, 3))), 0) + 1), 5, '0')
+	FROM SENIOR_COWORKER
+</selectKey>
+insert into SENIOR_COWORKER(
+	sr_no, smem_no, company_nm, company_dept,
+    company_job, company_loc, company_type
+) VALUES (
+#{srNo,jdbcType=VARCHAR}
+,#{smemNo,jdbcType=VARCHAR}
+,#{companyNm,jdbcType=VARCHAR}
+,#{companyDept,jdbcType=VARCHAR}
+,#{companyJob,jdbcType=VARCHAR}
+,#{companyLoc,jdbcType=VARCHAR}
+,#{companyType,jdbcType=VARCHAR}
+)
+</insert>
+<update id="updateAppl" parameterType="String">
+	UPDATE STUDENT
+		SET 
+		    STU_YN = 'Y'
+		WHERE 
+		    SMEM_NO = #{smemNo}
+</update>
+<update id="updateApplDel" parameterType="String">
+	UPDATE STUDENT
+		SET 
+		    STU_YN = 'N'
+		WHERE 
+		    SMEM_NO = #{smemNo}
+</update>
+</mapper>

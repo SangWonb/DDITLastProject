@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.careerup.mentoring.mentoringmentee.dao.SeniorCoworkerDAOS">
+<sql id="searchFrag">
+      <trim prefix="AND" prefixOverrides="AND">
+         <if test="not detailCondition.empty">
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+               <choose>
+                  <when test="simpleCondition.searchType eq 'job'">
+                     INSTR(C.company_job, #{simpleCondition.searchWord}) > 0
+                  </when>
+                  <when test="simpleCondition.searchType eq 'deptName'">
+                     INSTR(F.DEPT_NAME, #{simpleCondition.searchWord}) > 0
+                  </when>
+                  <otherwise>
+                     (INSTR(C.company_job, #{simpleCondition.searchWord}) > 0
+                     OR                     
+                     INSTR(F.DEPT_NAME, #{simpleCondition.searchWord}) > 0)
+                  </otherwise>
+               </choose>
+            </if>
+         </if>
+      </trim>
+   </sql>
+   
+<select id="selectTotalRecord" resultType="int">
+SELECT COUNT(*)
+	FROM SENIOR_COWORKER C
+			inner JOIN MEMBER D ON C.smem_no = D.MEM_NO
+			LEFT JOIN STUDENT E ON E.smem_no = D.MEM_NO
+			LEFT JOIN DEPARTMENT F ON E.DEPT_CODE = F.DEPT_CODE
+	WHERE E.STU_YN = 'Y'
+	<include refid="searchFrag"/>
+</select>
+<select id="selectList" resultType="SeniorCoworkerVO" parameterType="kr.or.ddit.utils.paging.PaginationInfo">
+		SELECT B.*
+		FROM(
+			SELECT ROWNUM RNUM, A.*
+			FROM(
+				SELECT 
+			        C.sr_no, C.smem_no, C.company_nm, C.company_dept,
+    				C.company_job, C.company_loc, C.company_type
+    				, D.MEM_NAME, F.DEPT_NAME
+				FROM SENIOR_COWORKER C
+				inner JOIN MEMBER D ON C.smem_no = D.MEM_NO
+				LEFT JOIN STUDENT E ON E.smem_no = D.MEM_NO
+				LEFT JOIN DEPARTMENT F ON E.DEPT_CODE = F.DEPT_CODE
+				WHERE E.STU_YN = 'Y'
+				<include refid="searchFrag"/>
+			) A
+		) B
+		<![CDATA[
+		WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+		]]>
+</select>
+<select id="select" resultType="SeniorCoworkerVO" parameterType="String">
+	SELECT 
+        C.sr_no, C.smem_no, C.company_nm, C.company_dept,
+		C.company_job, C.company_loc, C.company_type
+		, D.MEM_NAME, F.DEPT_NAME
+	FROM SENIOR_COWORKER C
+	LEFT JOIN MEMBER D ON C.smem_no = D.MEM_NO
+	LEFT JOIN STUDENT E ON E.smem_no = D.MEM_NO
+	LEFT JOIN DEPARTMENT F ON E.DEPT_CODE = F.DEPT_CODE
+	WHERE C.SR_NO = #{srNo}
+</select>
+<insert id="insert" parameterType="SeniorCoworkerVO">
+	<selectKey order="BEFORE" keyProperty="srNo" resultType="String">
+		SELECT 'SR' || LPAD(TO_CHAR(NVL(MAX(TO_NUMBER(SUBSTR(sr_no, 3))), 0) + 1), 5, '0')
+		FROM SENIOR_COWORKER
+	</selectKey>
+insert into SENIOR_COWORKER(
+	sr_no, smem_no, company_nm, company_dept,
+    company_job, company_loc, company_type
+) VALUES (
+#{srNo,jdbcType=VARCHAR}
+,#{smemNo,jdbcType=VARCHAR}
+,#{companyNm,jdbcType=VARCHAR}
+,#{companyDept,jdbcType=VARCHAR}
+,#{companyJob,jdbcType=VARCHAR}
+,#{companyLoc,jdbcType=VARCHAR}
+,#{companyType,jdbcType=VARCHAR}
+)
+</insert>
+
+</mapper>

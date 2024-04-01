@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.careerup.test.cotest.dao.CotestDAO">
+	<select id="selectQ" resultType="CotestQuestionVO">
+		SELECT
+		    cotest_quesno,
+		    cotest_area,
+		    cotest_ques,
+		    text_code,
+		    Cotest_area_code
+		FROM
+		    cotest_question
+		ORDER BY COTEST_QUESNO
+	</select>
+	<select id="selectT" resultType="CotestTextVO" >
+		SELECT
+			TO_NUMBER(SUBSTR(TEXT_CODE,4,2)) AS RNUM,
+		    text_code,
+		    text_nm,
+		    text_score
+		FROM
+		    cotest_text
+	</select>
+	<select id="selectResultList" parameterType="String" resultType="CotestResultVO">
+		SELECT
+		    cotest_resultno,
+		    mem_no,
+		    ca_01,
+		    ca_02,
+		    ca_03,
+		    ca_04,
+		    ca_05,
+		    ca_06,
+		    cotest_date
+		FROM
+		    cotest_result
+		where 
+		    mem_no = #{memNo}
+		order by 
+			cotest_date desc
+	</select>
+	<select id="selectResult" parameterType="String" resultType="CotestResultVO">
+		SELECT
+		    cotest_resultno,
+		    mem_no,
+		    ca_01,
+		    ca_02,
+		    ca_03,
+		    ca_04,
+		    ca_05,
+		    ca_06
+		FROM
+		    cotest_result
+		where 
+		    cotest_resultno = #{cotestResultno}
+	</select>
+	<select id="selectAvg">
+		SELECT
+		    ROUND(AVG(ca_01)) AS ca_01,
+		    ROUND(AVG(ca_02)) AS ca_02,
+		    ROUND(AVG(ca_03)) AS ca_03,
+		    ROUND(AVG(ca_04)) AS ca_04,
+		    ROUND(AVG(ca_05)) AS ca_05,
+		    ROUND(AVG(ca_06)) AS ca_06
+		FROM
+		    cotest_result
+	</select>
+	<select id="selectDeptAvg" parameterType="String">
+		SELECT
+		    ROUND(AVG(a.ca_01)) AS ca_01,
+		    ROUND(AVG(a.ca_02)) AS ca_02,
+		    ROUND(AVG(a.ca_03)) AS ca_03,
+		    ROUND(AVG(a.ca_04)) AS ca_04,
+		    ROUND(AVG(a.ca_05)) AS ca_05,
+		    ROUND(AVG(a.ca_06)) AS ca_06
+		FROM
+		    cotest_result a
+		join 
+		    student b on (a.mem_no=b.smem_no)
+		where 
+		    b.dept_code =#{deptCode}
+	</select>
+	<select id="selesctMyAvg">
+		SELECT
+		    ROUND(AVG(ca_01)) AS ca_01,
+		    ROUND(AVG(ca_02)) AS ca_02,
+		    ROUND(AVG(ca_03)) AS ca_03,
+		    ROUND(AVG(ca_04)) AS ca_04,
+		    ROUND(AVG(ca_05)) AS ca_05,
+		    ROUND(AVG(ca_06)) AS ca_06
+		FROM
+		    cotest_result
+		WHERE 
+			MEM_NO=#{memNo}
+	</select>
+	<select id="selectCate">
+		SELECT DISTINCT 
+			cotest_area, cotest_area_code
+		FROM 
+			cotest_question
+		order by 
+			cotest_area_code
+	</select>
+	<insert id="insertResult" parameterType="CotestResultVO">
+		<selectKey order="BEFORE" keyProperty="cotestResultno" keyColumn="COTEST_RESULTNO" resultType="String">
+			SELECT 
+				  'CORE'|| #{memNo} || LPAD(TO_NUMBER(NVL(SUBSTR(MAX(COTEST_RESULTNO), 14, 4), '0')) + 1, 4, '0')  AS COTEST_RESULTNO
+			FROM 
+				COTEST_RESULT
+			WHERE 
+				MEM_NO = #{memNo}
+		</selectKey>
+		INSERT INTO cotest_result(
+			cotest_resultno,
+		    mem_no,
+		    ca_01,
+		    ca_02,
+		    ca_03,
+		    ca_04,
+		    ca_05,
+		    ca_06,
+		    COTEST_DATE
+		) VALUES(
+			#{cotestResultno},
+			#{memNo},
+			#{ca01},
+			#{ca02},
+			#{ca03},
+			#{ca04},
+			#{ca05},
+			#{ca06},
+			SYSDATE
+		)
+		
+	</insert>
+
+</mapper>

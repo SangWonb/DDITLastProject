@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.info.tuition.dao.TuitionDAOS">
+
+<resultMap type="EnrollInvoiceVO" id="enrollList" autoMapping="true">
+	<id property="enrlNo" column="ENRL_NO"/>
+	
+	<association property="enrollfee" javaType="EnrollfeeVO" autoMapping="true">
+		<id property="enrlCode" column="ENRL_CODE"/>
+	</association>
+	
+	<collection property="enrollRecord" ofType="EnrollRecordVO" javaType="list">
+		<id property="enrlRec" column="ENRL_REC"/>
+		<result property="enrlNo" column="ENRL_NO"/>
+		<result property="enrlDate" column="ENRL_DATE"/>
+	</collection>
+	
+</resultMap>
+<select id="selectEnrollInvoiceList" resultMap="enrollList" parameterType="String">
+	SELECT B.*
+		FROM(
+			SELECT ROWNUM RNUM, A.*
+			FROM(
+            SELECT
+				   ei.enrl_no,ei.enrl_code,ei.enrl_deadline,ei.enrl_bank
+				   ,ei.enrl_account,ei.schol_code,ei.smem_no, ei.YEAR, ei.SEMESTER
+				   
+				   , ef.ENRL_MF, ef.ENRL_TF
+				   ,ef.ENRL_IF, ef.ENRL_MC,ef.ENRL_TOTAL
+				   
+				   , er.ENRL_REC, er.ENRL_DATE
+				   
+				   , sc.schol_amt
+				FROM
+				    ENROLL_INVOICE ei
+				inner join student s on s.smem_no = ei.smem_no
+				inner join enrollfee ef on ef.dept_code = s.dept_code
+				left join enroll_record er on er.enrl_no = ei.enrl_no
+				inner join SCHOLASHIP sc on sc.schol_code = ei.schol_code
+				WHERE ei.smem_no = #{memNo}
+				AND s.dept_code = #{deptCode}
+   			) A
+		) B
+		order by year, SEMESTER
+</select>
+<select id="selectEnrollInvoice" resultType="EnrollInvoiceVO" parameterType="String">
+ SELECT
+	   ei.enrl_no, ei.enrl_code,ei.enrl_deadline,ei.enrl_bank
+	   ,ei.enrl_account,ei.schol_code,ei.smem_no, ei.YEAR, ei.SEMESTER
+	   
+	    ,TO_CHAR(ef.ENRL_MF,'FM999,999,999')AS ENRL_MF,
+	    TO_CHAR(ef.ENRL_TF,'FM999,999,999') AS ENRL_TF,
+	    TO_CHAR(ef.ENRL_IF,'FM999,999,999') AS ENRL_IF,
+	    TO_CHAR(ef.ENRL_MC,'FM999,999,999') AS ENRL_MC,
+	    TO_CHAR(ef.ENRL_TOTAL,'FM999,999,999') AS ENRL_TOTAL,
+	    TO_CHAR(sc.schol_amt,'FM999,999,999') AS schol_amt,
+	   TO_CHAR((ef.ENRL_TF - sc.SCHOL_AMT),'FM999,999,999') AS REAL2,
+	   TO_CHAR((ef.ENRL_TOTAL - sc.SCHOL_AMT),'FM999,999,999') AS REAL
+	   
+	   , er.ENRL_REC, er.ENRL_DATE
+	   
+	FROM
+	    ENROLL_INVOICE ei
+	inner join student s on s.smem_no = ei.smem_no
+	inner join enrollfee ef on ef.dept_code = s.dept_code
+	left join enroll_record er on er.enrl_no = ei.enrl_no
+	inner join SCHOLASHIP sc on sc.schol_code = ei.schol_code
+	where ei.enrl_no = #{enrlNo}
+</select>
+<select id="selectBill" parameterType="String" resultMap="enrollList">
+	SELECT
+	   ei.enrl_no, ei.enrl_code,ei.enrl_deadline,ei.enrl_bank
+	   ,ei.enrl_account,ei.schol_code,ei.smem_no, ei.YEAR, ei.SEMESTER
+	   
+	   , ef.ENRL_MF, ef.ENRL_TF
+	   ,ef.ENRL_IF, ef.ENRL_MC,ef.ENRL_TOTAL
+	   
+	   , er.ENRL_REC, er.ENRL_DATE
+	   
+	   , sc.schol_amt
+	FROM
+	    ENROLL_INVOICE ei
+	inner join student s on s.smem_no = ei.smem_no
+	inner join enrollfee ef on ef.dept_code = s.dept_code
+	left join enroll_record er on er.enrl_no = ei.enrl_no
+	inner join SCHOLASHIP sc on sc.schol_code = ei.schol_code
+	where ei.enrl_no = #{enrlNo}
+</select>
+</mapper>

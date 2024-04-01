@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.professor.info.lecture.lectureappl.dao.LectureContentOpenDAOP">
+<insert id="insert" parameterType="LectureContentVO">
+	<selectKey order="BEFORE" keyProperty="lpNo" resultType="String">
+		SELECT 'WEEK' || LPAD(TO_CHAR(NVL(MAX(TO_NUMBER(SUBSTR(LP_NO, 5))), 0) + 1), 2, '0') 
+		FROM LECTURE_CONTENT
+		WHERE LP_CODE = #{lpCode}
+	</selectKey>
+	INSERT INTO LECTURE_CONTENT(
+	    LP_NO, LP_CODE, LP_CONTENT
+    	)
+		VALUES
+		(
+		#{lpNo,jdbcType=VARCHAR}
+		, #{lpCode,jdbcType=VARCHAR}
+		, #{lpContent,jdbcType=NUMERIC}
+		)
+</insert>
+<update id="update" parameterType="LectureContentVO">
+	UPDATE LECTURE_CONTENT 
+		SET
+			LP_CONTENT = #{lpContent,jdbcType=NUMERIC}
+		WHERE LP_CODE = #{lpCode}
+</update>
+<select id="selectListContent" parameterType="String" resultType="LectureContentVO">
+	SELECT
+		LP_CONTENT, LP_CODE, LP_NO
+	FROM LECTURE_CONTENT
+	WHERE LP_CODE = #{lpCode}
+</select>
+<delete id="delete" parameterType="String">
+	DELETE FROM LECTURE_CONTENT C
+	WHERE LP_CODE = #{lpCode}
+</delete>
+</mapper>

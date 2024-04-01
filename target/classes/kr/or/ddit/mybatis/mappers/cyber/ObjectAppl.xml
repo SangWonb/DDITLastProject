@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.professor.cyber.objectionappl.dao.ObjectApplDAO">
+	
+	<select id="comListP" parameterType="map" resultType="ComplaintVO">
+		WITH COMLIST AS(
+		SELECT
+		    C.cpt_no,
+		    C.cpt_comment,
+		    C.cpt_title,
+		    C.app_status,
+		    C.app_reject,
+		    C.cpt_date,
+		    C.cpt_code,
+		    C.smem_no,
+		    C.lec_code,
+		    C.cpt_type,
+            M.mem_name,
+            D.dept_name
+		FROM
+		    complaint C
+                LEFT OUTER JOIN member M on C.smem_no = M.mem_no
+                LEFT OUTER JOIN student S on S.smem_no = C.smem_no
+                LEFT OUTER JOIN department D on D.dept_code = S.dept_code
+		WHERE lec_code= #{lecCode}
+		AND app_status='STA01'
+		ORDER BY cpt_date desc
+		), COMRNUMLIST AS(
+		SELECT ROWNUM RNUM,COMLIST.*
+		FROM COMLIST
+		)
+		SELECT COMRNUMLIST.*
+		FROM COMRNUMLIST
+		<![CDATA[
+	      WHERE RNUM >= #{paging.startRow} AND RNUM <= #{paging.endRow}
+	   ]]>
+	</select>
+	
+	<select id="totalRecord" parameterType="String" resultType="int">
+		SELECT count(*)
+		FROM
+		    complaint
+		WHERE lec_code= #{lecCode}
+		AND app_status='STA01'
+	</select>
+	
+	<select id="comListS" parameterType="String" resultType="ComplaintVO">
+		WITH COMLIST AS(
+		SELECT
+		    cpt_no,
+		    cpt_comment,
+		    cpt_title,
+		    app_status,
+		    app_reject,
+		    cpt_date,
+		    smem_no,
+		    lec_code,
+		    cpt_type,
+		    cpt_code
+		FROM
+		    complaint
+		WHERE lec_code= #{lecCode}
+		AND smem_no = #{smemNo}
+		ORDER BY cpt_date desc
+		)
+		SELECT ROWNUM RNUM,COMLIST.*
+		FROM COMLIST
+	</select>	
+	
+	<select id="selectCom" parameterType="String" resultType="ComplaintVO">
+		SELECT
+		    C.cpt_no,
+		    C.cpt_comment,
+		    C.cpt_title,
+		    C.app_status,
+		    C.app_reject,
+		    C.cpt_date,
+		    C.cpt_code,
+		    C.smem_no,
+		    C.lec_code,
+		    C.cpt_type,
+            M.mem_name,
+            D.dept_name
+		FROM
+		    complaint C
+                LEFT OUTER JOIN member M on C.smem_no = M.mem_no
+                LEFT OUTER JOIN student S on S.smem_no = C.smem_no
+                LEFT OUTER JOIN department D on D.dept_code = S.dept_code
+		WHERE cpt_no= #{cptNo}
+	</select>
+	
+	<insert id="comInsert" parameterType="ComplaintVO">
+		<selectKey order="BEFORE" keyProperty="cptNo" resultType="string">
+			SELECT 'CPT' || LPAD(TO_CHAR(NVL(MAX(to_number(substr(cpt_no,4))), 0)+1), 7, '0')   
+			FROM complaint
+		</selectKey>
+		INSERT INTO complaint (
+		    cpt_no,
+		    cpt_comment,
+		    cpt_title,
+		    smem_no,
+		    lec_code,
+		    cpt_type,
+		    cpt_code
+		) VALUES (
+			#{cptNo}
+		    ,#{cptComment}
+		    ,#{cptTitle}
+		    ,#{smemNo}
+		    ,#{lecCode}
+		    ,#{cptType}
+		    ,#{cptCode}
+		)
+	</insert>
+	
+	<update id="comUpdate" parameterType="ComplaintVO">
+		UPDATE complaint
+		SET
+		   	app_status = #{appStatus}
+		    ,app_reject = #{appReject}
+		WHERE
+		        cpt_no = #{cptNo}
+	</update>
+	
+	<delete id="comDelete" parameterType="String">
+		DELETE FROM complaint
+		WHERE
+		        cpt_no = #{cptNo}
+	</delete>
+	
+	<select id="selectObjectApplDay" parameterType="kr.or.ddit.student.info.signupclasses.vo.SignUpVO" resultType="CalendarVO">
+		SELECT
+		    cldr_start,
+		    cldr_end
+		FROM
+		    calendar
+		WHERE
+		    CLDR_TYPE = 'OA'
+		<![CDATA[
+		    AND cldr_start >= #{semesterStart,jdbcType=DATE}
+		    AND cldr_start <= #{semesterEnd,jdbcType=DATE}
+		]]>
+	</select>
+	
+</mapper>

@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.professor.info.subject.subjectappl.dao.SubjectApplDAOP">
+
+	<resultMap type="SubjectVO" id="subjectApplList" autoMapping="true">
+		<id property = "subAppno" column="SUB_APPNO"/>
+		<association property="status" javaType="hashmap">
+			<result property="statusCode" column="STATUS_CODE"/>
+			<result property="statusNm" column="STATUS_NM"/>
+		</association>
+		<association property="reject" javaType="hashmap">
+        	<result property="rejectCode" column="REJECT_CODE"/>
+        	<result property="rejectReason" column="REJECT_REASON"/>
+    	</association>
+	</resultMap>
+	
+<select id="selectSubjectApplList" resultMap="subjectApplList" parameterType="String">
+		SELECT B.*
+		FROM(
+			SELECT ROWNUM RNUM, A.*
+			FROM(
+				SELECT 
+					sub.SUB_CODE, sub.SUB_NAME, sub.SUB_SCHYEAR, sub.MAJOR_CULTURAL, sub.CHOICE_REQUIRE
+					, sub.SUB_SAVED, sub.SUB_APPNO, sub.SUB_CREDIT , sub.PMEM_NO, sub.SUB_SEMESTER
+					, sub.APPL_DATE
+			        ,R.REJECT_REASON, s.status_nm, s.status_code
+			        , D.DEPT_NAME
+				FROM subject sub
+				LEFT JOIN DEPARTMENT D ON SUB.dept_code = D.dept_code
+				LEFT JOIN STATUS S ON sub.status_code = S.STATUS_CODE
+		    	LEFT JOIN REJECT R ON sub.reject_code = R.REJECT_CODE
+			) A
+		) B
+		WHERE PMEM_NO = #{pmemNo}
+</select>
+	<select id="selectRecord" resultMap="subjectApplList" parameterType="String">
+		SELECT 
+	       sub.SUB_CODE, sub.SUB_NAME, sub.SUB_SCHYEAR, sub.MAJOR_CULTURAL, sub.CHOICE_REQUIRE
+			, sub.SUB_SAVED, sub.SUB_APPNO, sub.SUB_CREDIT , sub.PMEM_NO, sub.SUB_SEMESTER
+			, sub.APPL_DATE
+		   , s.status_nm, r.reject_reason, s.status_code
+		FROM subject sub
+	    LEFT JOIN STATUS S ON sub.status_code = S.STATUS_CODE
+    	LEFT JOIN REJECT R ON sub.reject_code = R.REJECT_CODE
+		WHERE
+     		sub.SUB_APPNO = #{subAppno}
+	</select>
+<select id="selectSubjectAppl" resultMap="subjectApplList" parameterType="String">
+	SELECT 
+		sub.SUB_CODE, sub.SUB_NAME, sub.SUB_SCHYEAR, sub.MAJOR_CULTURAL, sub.CHOICE_REQUIRE
+		, sub.SUB_SAVED, sub.SUB_APPNO, sub.SUB_CREDIT , sub.PMEM_NO, sub.SUB_SEMESTER
+		, sub.APPL_DATE
+        ,R.REJECT_REASON, s.status_nm, s.status_code
+        , D.DEPT_NAME, SUB.DEPT_CODE, M.MEM_NAME
+	FROM subject sub
+	LEFT JOIN DEPARTMENT D ON SUB.dept_code = D.dept_code
+    LEFT JOIN STATUS S ON sub.status_code = S.STATUS_CODE
+   	LEFT JOIN REJECT R ON sub.reject_code = R.REJECT_CODE
+   	INNER JOIN MEMBER M ON SUB.PMEM_NO = M.MEM_NO
+	WHERE sub.SUB_APPNO = #{subAppno}
+</select>
+
+<insert id="subjectApplInserst" parameterType="SubjectVO">
+	<selectKey order="BEFORE" keyProperty="subAppno" resultType="String">
+		SELECT 'SUB' || LPAD(TO_CHAR(NVL(MAX(TO_NUMBER(SUBSTR(SUB_APPNO, 4))), 0) + 1), 4, '0') 
+		FROM SUBJECT
+	</selectKey>
+	INSERT INTO SUBJECT(   
+	    SUB_APPNO, SUB_NAME, SUB_SCHYEAR, MAJOR_CULTURAL, CHOICE_REQUIRE
+	    , SUB_CREDIT, SUB_SEMESTER, PMEM_NO
+	    , STATUS_CODE, REJECT_CODE, APPL_DATE, dept_code
+    	)
+		VALUES
+		(
+		#{subAppno,jdbcType=VARCHAR}
+		, #{subName,jdbcType=VARCHAR}
+		, #{subSchyear,jdbcType=VARCHAR}
+		, #{majorCultural,jdbcType=VARCHAR}
+		, #{choiceRequire,jdbcType=VARCHAR}
+		, #{subCredit,jdbcType=NUMERIC}
+		, #{subSemester,jdbcType=VARCHAR}
+		, #{pmemNo,jdbcType=VARCHAR}
+        , 'STA01'
+		, NULL
+		, SYSDATE
+		, #{deptCode,jdbcType=VARCHAR}
+		)
+</insert>
+<update id="subjectApplUpdate" parameterType="SubjectVO">
+	UPDATE SUBJECT 
+	SET
+		 SUB_NAME = #{subName,jdbcType=VARCHAR}
+		, SUB_SCHYEAR = #{subSchyear,jdbcType=VARCHAR}
+		, MAJOR_CULTURAL = #{majorCultural,jdbcType=VARCHAR}
+		, CHOICE_REQUIRE = #{choiceRequire,jdbcType=VARCHAR}
+		, SUB_SAVED = #{subSaved,jdbcType=NUMERIC}
+		, SUB_APPNO = #{subAppno,jdbcType=VARCHAR}
+		, SUB_CREDIT = #{subCredit,jdbcType=NUMERIC}
+		, SUB_SEMESTER = #{subSemester,jdbcType=VARCHAR}
+		, DEPT_CODE = #{deptCode,jdbcType=VARCHAR}
+	WHERE SUB_APPNO = #{subAppno}
+</update>
+<delete id="subjectApplDelete" parameterType="String">
+	DELETE FROM subject WHERE SUB_APPNO = #{subAppno}
+</delete>
+
+<select id="selectSubjectDecisionList" resultMap="subjectApplList" parameterType="String">
+		SELECT B.*
+		FROM(
+			SELECT ROWNUM RNUM, A.*
+			FROM(
+				SELECT 
+					sub.SUB_CODE, sub.SUB_NAME, sub.SUB_SCHYEAR, sub.MAJOR_CULTURAL, sub.CHOICE_REQUIRE
+					, sub.SUB_SAVED, sub.SUB_APPNO, sub.SUB_CREDIT , sub.PMEM_NO, sub.SUB_SEMESTER
+					, sub.APPL_DATE
+			        ,R.REJECT_REASON, s.status_nm, sub.status_code
+			        , D.DEPT_NAME
+				FROM subject sub
+				LEFT JOIN DEPARTMENT D ON SUB.dept_code = D.dept_code
+				LEFT JOIN STATUS S ON sub.status_code = S.STATUS_CODE
+		    	LEFT JOIN REJECT R ON sub.reject_code = R.REJECT_CODE
+		    	WHERE D.DEPT_CODE = #{deptCode}
+			) A
+		) B
+		WHERE STATUS_CODE = 'STA01'
+		
+</select>
+<update id="subjectDecisionUpdate" parameterType="SubjectVO">
+	UPDATE SUBJECT 
+	SET
+		STATUS_CODE = #{statusCode,jdbcType=VARCHAR},
+		reject_code = #{rejectCode,jdbcType=VARCHAR}
+	WHERE SUB_APPNO = #{subAppno}
+</update>
+
+<select id="selectList" resultType="ClubVO">
+		SELECT ROWNUM RNUM
+		      SUB_NAME, SUB_APPNO, 
+		      STATUS_CODE, REJECT_CODE, APPL_DATE
+		FROM 
+		    SUBJECT 
+		WHERE STATUS_CODE = 'STA06'
+</select>
+<update id="updateSubjectNo" parameterType="SubjectVO">
+	<selectKey order="BEFORE" keyProperty="subCode" resultType="String">
+		SELECT '1709-' || LPAD(TO_CHAR(NVL(MAX(TO_NUMBER(SUBSTR(SUB_CODE, 6))), 0) + 1), 4, '0') 
+		FROM SUBJECT
+	</selectKey>
+	 UPDATE 
+      	SUBJECT
+	  SET 
+      	SUB_CODE=#{subCode}
+	  WHERE 
+	    SUB_APPNO=#{subAppno}
+</update>
+</mapper>

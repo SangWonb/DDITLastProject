@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.book.dao.BookRecomDAOC">
+
+<!-- 	<select id="selectDeptName" parameterType="MemberVO" resultType="string"> -->
+<!-- 		SELECT DEPT_NAME -->
+<!-- 		FROM STUDENT INNER JOIN DEPARTMENT USING (DEPT_CODE) -->
+<!-- 		WHERE SMEM_NO = #{memNo} -->
+<!-- 	</select> -->
+	
+<!-- 	<select id="selectDeptName" parameterType="MemberVO" resultType="string"> -->
+<!-- 		SELECT DEPT_NAME -->
+<!-- 		FROM PROPESSOR INNER JOIN DEPARTMENT USING (DEPT_CODE) -->
+<!-- 		WHERE PMEM_NO = #{memNo} -->
+<!-- 	</select> -->
+
+	<select id="selectDeptName" parameterType="MemberVO" resultType="string">
+	    <choose>
+	        <when test="memNo.length() == 9 and memNo.substring(6) &lt; '500'">
+	            SELECT 
+	                DEPT_NAME
+	            FROM 
+	                STUDENT INNER JOIN DEPARTMENT USING (DEPT_CODE)
+	            WHERE SMEM_NO = #{memNo}
+	        </when>
+	        <when test="memNo.length() == 9 and memNo.substring(6) &gt;= '500'">
+	            SELECT 
+	                DEPT_NAME
+	            FROM 
+	                PROFESSOR INNER JOIN DEPARTMENT USING (DEPT_CODE)
+	            WHERE PMEM_NO = #{memNo}
+	        </when>
+	    </choose>
+	</select>
+
+	<select id="selectBookRecom" parameterType="BookRecomVO" resultType="BookRecomVO">
+		SELECT
+		    BOOK_CATEGORY,AGE,DEPT_CODE,
+		    (SELECT BOOK_NAME FROM BOOK WHERE BOOK_CODE = ONE)ONE,
+		    (SELECT BOOK_NAME FROM BOOK WHERE BOOK_CODE = TWO)TWO,
+		    (SELECT BOOK_NAME FROM BOOK WHERE BOOK_CODE = THREE)THREE
+		FROM
+		    BOOK_RECOM
+		WHERE
+		    BOOK_CATEGORY = #{bookCategory,jdbcType=VARCHAR}
+		    AND AGE = #{age,jdbcType=CHAR}
+		    AND DEPT_CODE = #{deptCode,jdbcType=VARCHAR}
+	</select>
+	
+</mapper>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.manager.stats.book.dao.BookStatsDAO">
+	
+	<select id="selectMonthlyBookStats" resultType="BookRentalVO">
+		SELECT 
+		    EXTRACT(YEAR FROM RENT_START) AS YEAR,
+		    EXTRACT(MONTH FROM RENT_START) AS MONTH,
+		    COUNT(BOOK_CODE) AS RENT_COUNT
+		FROM 
+		    BOOKRENTAL
+		GROUP BY
+		    EXTRACT(YEAR FROM RENT_START),
+		    EXTRACT(MONTH FROM RENT_START)
+		ORDER BY 
+		    YEAR ASC, MONTH ASC
+	</select>
+	
+	<select id="selectLastYearBookStats" resultType="BookRentalVO">
+		SELECT 
+		    EXTRACT(MONTH FROM RENT_START) AS MONTH,
+		    COUNT(BOOK_CODE) AS RENT_COUNT
+		FROM 
+		    BOOKRENTAL
+		<![CDATA[
+		WHERE 
+		    RENT_START >= TRUNC(SYSDATE, 'YYYY') - INTERVAL '1' YEAR 
+		    AND RENT_START < TRUNC(SYSDATE, 'YYYY')
+		GROUP BY
+		    EXTRACT(MONTH FROM RENT_START)
+		ORDER BY MONTH ASC
+		]]>
+	</select>
+	
+	<select id="selectMostPopularBooksLastMonth" resultType="BookRentalVO">
+		SELECT 
+		    COUNT(A.BOOK_CODE) AS STATS,B.BOOK_NAME,B.BOOK_WRITER
+		FROM 
+		    BOOKRENTAL A 
+		JOIN 
+		    BOOK B ON A.BOOK_CODE = B.BOOK_CODE
+		WHERE 
+		    EXTRACT(YEAR FROM A.RENT_START) = EXTRACT(YEAR FROM SYSDATE)
+		AND 
+		    EXTRACT(MONTH FROM A.RENT_START) = EXTRACT(MONTH FROM ADD_MONTHS(SYSDATE, -1))
+		GROUP BY A.BOOK_CODE,B.BOOK_NAME,B.BOOK_WRITER
+		ORDER BY STATS DESC 
+	</select>
+	
+	<select id="selectMostPopularCategoryLastMonth" resultType="BookRentalVO">
+		SELECT 
+		    COUNT(B.BOOK_CATEGORY)AS STATS, B.BOOK_CATEGORY
+		FROM 
+		    BOOKRENTAL A 
+		JOIN 
+		    BOOK B ON A.BOOK_CODE = B.BOOK_CODE
+		WHERE 
+		    EXTRACT(YEAR FROM A.RENT_START) = EXTRACT(YEAR FROM SYSDATE)
+		AND 
+		    EXTRACT(MONTH FROM A.RENT_START) = EXTRACT(MONTH FROM ADD_MONTHS(SYSDATE, -1))
+		GROUP BY B.BOOK_CATEGORY
+		ORDER BY STATS DESC 
+	</select>
+	
+</mapper>

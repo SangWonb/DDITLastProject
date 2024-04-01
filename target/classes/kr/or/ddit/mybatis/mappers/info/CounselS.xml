@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.info.counsel.startcounsel.dao.CounselSDAO">
+	<select id="selectCounselList" parameterType="String" resultType="CounselVO">
+		SELECT 
+		    a.couns_appno,
+		    a.couns_datetime,
+		    a.couns_reason,
+		    a.couns_method,
+		    a.couns_type,
+		    a.couns_status,
+		    d.status_nm,
+		    a.couns_reject,
+		    e.reject_reason,
+		    a.mem_no,
+		    b.mem_name as studentName,
+		    a.couns_pro,
+		    c.mem_name as professorName,
+		    a.couns_content,
+		    a.couns_notice,
+		    a.couns_no,
+		    a.couns_title,
+		    a.couns_addr
+		FROM
+		    COUNSEL a
+		join
+		    member b on (a.mem_no=b.mem_no)
+		join
+		    member c on(a.couns_pro=c.mem_no)
+		join 
+		    status d on(a.couns_status = d.status_code) 
+		left outer join
+		    reject e on (a.couns_reject = e.reject_code)
+		WHERE 
+		    a.MEM_NO = #{memNo}
+		ORDER BY a.couns_datetime DESC
+	</select>
+	<select id="selectCounsel" parameterType="String" resultType="CounselVO">
+		SELECT 
+		    a.couns_appno,
+		    a.couns_datetime,
+		    a.couns_reason,
+		    a.couns_method,
+		    a.couns_type,
+		    a.couns_status,
+		    d.status_nm,
+		    a.couns_reject,
+		    e.reject_reason,
+		    a.mem_no,
+		  	b.mem_name as studentName,
+		    a.couns_pro,
+		    c.mem_name as professorName,
+		    a.couns_content,
+		    a.couns_notice,
+		    a.couns_no,
+		    a.couns_title,
+		    a.couns_addr
+		FROM
+		    COUNSEL a
+		join
+		    member b on (a.mem_no=b.mem_no)
+		join
+		    member c on(a.couns_pro=c.mem_no)
+		join 
+		    status d on(a.couns_status = d.status_code) 
+		left outer join
+		    reject e on (a.couns_reject = e.reject_code)
+		WHERE 
+		    a.couns_no= #{counsNo}
+	</select>
+	<select id="selectTotal" parameterType="String" resultType="int">
+		SELECT
+  			COUNT(couns_no) as total
+		FROM
+		    counsel
+		WHERE MEM_NO = #{memNo}
+	</select>
+	<select id="selectWaiting" resultType="int">
+		SELECT 
+		    COUNT(COUNS_NO) as waiting
+		FROM
+		    COUNSEL
+		WHERE 
+		    MEM_NO = #{memNo}
+		AND 
+		    COUNS_STATUS='STA01'
+	</select>
+
+</mapper>

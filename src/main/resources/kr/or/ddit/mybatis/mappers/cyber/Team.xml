@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.professor.cyber.teamproject.dao.TeamDAO">
+	
+	<resultMap type="TeamVO" id="teamListMap" autoMapping="true">
+		<id property="teamNo" column="team_no"/>
+		<collection property="teamMemberList" javaType="list" ofType="TeamMemberVO" autoMapping="true">
+			<id property="teamNo" column="team_no"/>
+			<id property="smemNo" column="smem_no"/>
+		</collection>
+	</resultMap>
+	
+	<select id="selectTeamList" parameterType="String" resultMap="teamListMap">
+		SELECT
+		    T.team_no,
+		    T.tp_no,
+		    T.team_name,
+		    T.team_comment,
+		    T.teampro_score,
+		    T.gf_no,
+		    T.submit_status,
+		    TM.smem_no,
+		    M.mem_name,
+		    D.dept_name
+		FROM team T 
+		    INNER JOIN team_member TM on (T.team_no = TM.team_no)
+		    INNER JOIN member M on (TM.smem_no = M.mem_no)
+		    INNER JOIN student S on (TM.smem_no = S.smem_no)
+		    INNER JOIN DEPARTMENT D on (S.dept_code = D.dept_code)
+		WHERE
+		    tp_no = #{tpNo}
+	</select>
+	
+	<resultMap type="TeamVO" id="teamMap" autoMapping="true">
+		<id property="teamNo" column="team_no"/>
+		<collection property="teamMemberList" javaType="list" ofType="TeamMemberVO" autoMapping="true">
+			<id property="teamNo" column="team_no"/>
+			<id property="smemNo" column="smem_no"/>
+		</collection>
+		<collection property="fileList" javaType="list" ofType="FileVO" autoMapping="true">
+			<id property="fileNo" column="file_no"/>
+		</collection>
+	</resultMap>
+	
+	<select id="selectTeam" parameterType="String" resultMap="teamMap">
+		SELECT
+		    T.team_no,
+		    T.tp_no,
+		    T.team_name,
+		    T.team_comment,
+		    T.teampro_score,
+		    T.gf_no,
+		    T.submit_status,
+		    TM.smem_no,
+		    M.mem_name,
+		    D.dept_name,
+		    F.file_no,
+		    F.file_nm,
+		    F.file_save,
+		    F.mime,
+		    F.file_size,
+		    F.fancy_size,
+		    F.gf_no
+		FROM team T 
+		    INNER JOIN team_member TM on (T.team_no = TM.team_no)
+		    INNER JOIN member M on (TM.smem_no = M.mem_no)
+		    INNER JOIN student S on (TM.smem_no = S.smem_no)
+		    INNER JOIN DEPARTMENT D on (S.dept_code = D.dept_code)
+		    LEFT OUTER JOIN "FILE" F on (T.gf_no = F.gf_no)
+		WHERE
+		    T.team_no = #{teamNo}
+	</select>
+	
+	
+	<select id="findTeam" parameterType="String" resultType="String">
+		SELECT
+		    TM.team_no,
+		    TM.smem_no,
+		    T.tp_no
+		FROM
+		    team_member TM INNER JOIN team T on(TM.team_no = T.team_no)
+		WHERE  
+		    smem_no = #{smemNo}
+		    and T.tp_no = #{tpNo}
+	</select>
+	
+	<select id="teamProjectNotEvaluationCount" parameterType="String" resultType="int">
+		SELECT
+		    count(*)
+		FROM
+		    team
+		WHERE tp_no = #{tpNo}
+		    and teampro_score is null
+	</select>
+
+	<update id="teamProjectSubmit" parameterType="String">
+		UPDATE team
+		SET
+		    submit_status = #{submitStatus}
+		WHERE
+		    team_no = #{teamNo}
+	</update>
+	
+	<update id="teamEvalution" parameterType="TeamVO">
+		UPDATE team
+		SET
+		    team_comment = #{teamComment},
+		    teampro_score = #{teamproScore}
+		WHERE
+		    team_no = #{teamNo}
+	</update>
+	
+	<update id="uploadAddGfNoTeam" parameterType="String">
+		UPDATE team
+		SET
+		    gf_no = #{gfNo}
+		WHERE
+		    team_no = #{teamNo}
+	</update>
+	
+	<select id="maxTeamNo" resultType="String">
+		SELECT 'TNO' || LPAD(TO_CHAR(NVL(MAX(to_number(substr(team_no,4))), 0)+1), 7, '0')   
+		FROM team
+	</select>
+	
+	<insert id="insertTeam" parameterType="TeamVO">
+		INSERT INTO team (
+		    team_no,
+		    tp_no,
+		    team_name
+		) VALUES (
+			#{teamNo,jdbcType=VARCHAR}
+			, #{tpNo,jdbcType=VARCHAR}
+			, #{teamName,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<insert id="insertTeamMember">
+		INSERT INTO team_member (
+		    team_no,
+		    smem_no
+		) VALUES (
+		    #{teamNo,jdbcType=VARCHAR}
+		    , #{smemNo,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<delete id="deleteTeam" parameterType="String">
+		DELETE FROM team
+		WHERE
+	       	tp_no =  #{tpNo}
+	</delete>
+	
+	<delete id="deleteTeamMember" parameterType="String">
+		DELETE FROM team_member
+		WHERE
+		    team_no = #{teamNo}
+	</delete>
+	
+	<update id="updateTeamSocre" parameterType="TeamVO">
+		UPDATE team
+		SET
+		    teampro_score = #{teamproScore}
+		WHERE
+		    team_no = #{teamNo}
+	</update>
+
+</mapper>

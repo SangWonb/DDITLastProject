@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.cyber.exam.dao.ExamDAOS">
+
+	<select id="selectExam" parameterType="String" resultType="LecTestVO">
+		SELECT
+		    A.lt_code,
+		    A.lt_cate,
+		    A.lec_code,
+		    A.lt_sem,
+		    A.lt_gu,
+		    A.lt_total_score,
+		    A.lt_total_q,
+		    A.lt_total_time,
+		    A.lt_name,
+		    A.lt_type,
+		    B.TG_RECORD,
+		    D.LT_DAY,
+		    D.LT_TIME,
+		    A.LT_DATE
+		FROM
+		    lec_test A
+		LEFT OUTER JOIN 
+		    TEST_GRADE B ON (A.LT_CODE = B.LT_CODE AND B.SMEM_NO = '202204033')
+		JOIN
+		    LECTURE C ON (A.LEC_CODE = C.LEC_CODE)
+		JOIN 
+		    LECTURE_TIME D ON(C.LOL_CODE=D.LOL_CODE)
+		WHERE 
+		    A.lec_Code = #{lecCode}
+		ORDER BY 
+		    A.lt_code DESC
+	</select>
+	<select id="selectExamDetail" parameterType="String" resultType="LecTestVO">
+		SELECT
+		    lt_code,
+		    lt_cate,
+		    lec_code,
+		    lt_sem,
+		    lt_gu,
+		    lt_total_score,
+		    lt_total_q,
+		    lt_total_time,
+		    lt_name,
+		    lt_type
+		FROM
+		    lec_test
+		where 
+			lt_code = #{ltCode}
+	</select>
+	<select id="selectQ" parameterType="String" resultType="TestQuestionVO">
+		SELECT
+		    tq_no,
+		    lt_code,
+		    tq_answer,
+		    tq_score
+		FROM
+		    test_question
+		where 
+			lt_Code = #{ltCode}
+		ORDER BY 
+			TQ_NO
+	</select>
+	<select id="selectA" parameterType="String" resultType="String">
+		SELECT
+		    tq_answer
+		FROM
+		    test_question
+		where lt_Code = #{ltCode}
+		ORDER BY TQ_NO
+	</select>
+	<select id="selectS" parameterType="String" resultType="String">
+		SELECT
+		    tq_score
+		FROM
+		    test_question
+		where lt_Code = #{ltCode}
+		ORDER BY TQ_NO
+	</select>
+	<select id="selectLHcode" parameterType="RegistrationVO" resultType="String">
+		SELECT 
+		    LH_CODE
+		FROM 
+		    registration
+		WHERE 
+		    SMEM_NO = #{smemNo}
+		AND
+		    LEC_CODE = #{lecCode}
+	</select>
+	<insert id="insertNewGrade" parameterType="TestGradeVO">
+		INSERT INTO 
+		    TEST_GRADE(LT_CODE,SMEM_NO,TG_RECORD,LH_CODE)
+		VALUES 
+		    (
+		    #{ltCode},
+		    #{smemNo},
+		    #{tgRecord},
+		    #{lhCode}
+		    )
+	</insert>
+
+</mapper>

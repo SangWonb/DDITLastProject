@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.manager.stu.criteria.graduationcriteria.dao.DepartmentCriteriaDAOM">
+<update id="update" parameterType="DepartmentVO">
+	UPDATE DEPARTMENT
+	SET 
+	    DEPT_THESIS = #{deptThesis,jdbcType=VARCHAR},
+	    DEPT_TEST = #{deptTest,jdbcType=VARCHAR},
+	    DEPT_MRC = #{deptMrc,jdbcType=VARCHAR},
+		DEPT_MOC = #{deptMoc,jdbcType=VARCHAR},
+		DEPT_CRC = #{deptCrc,jdbcType=VARCHAR},
+		DEPT_COC = #{deptCoc,jdbcType=VARCHAR}
+	WHERE
+	    DEPT_CODE = #{deptCode}
+</update>
+</mapper>

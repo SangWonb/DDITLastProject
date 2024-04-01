@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.careerup.mentoring.mentoringmentor.dao.MentorDecisionDAOS">
+
+	<resultMap type="MenteeVO" id="mentorDecisionList" autoMapping="true">
+		<id property = "menteeNo" column="MENTEE_NO"/>
+		<association property="status" javaType="hashmap">
+			<result property="statusCode" column="STATUS_CODE"/>
+			<result property="statusNm" column="STATUS_NM"/>
+		</association>
+		<association property="reject" javaType="hashmap">
+        	<result property="rejectCode" column="REJECT_CODE"/>
+        	<result property="rejectReason" column="REJECT_REASON"/>
+    	</association>
+	</resultMap>
+	
+<select id="selectTotalRecord" parameterType="int">
+	SELECT COUNT(*)
+	FROM MENTEE
+</select>
+<select id="selectDecisionList" resultMap="mentorDecisionList" parameterType="String">
+		SELECT B.*
+		FROM(
+			SELECT ROWNUM RNUM, A.*
+			FROM(
+				SELECT 
+			       M.mentee_no, M.mentee_job, M.mentee_com,
+				   M.sr_no, M.status_code, M.reject_code,
+				   M.mentee_date, M.mem_no, MEM.MEM_NAME, DE.dept_name, R.REJECT_REASON,
+		        	s.status_nm
+				FROM mentee M
+                LEFT JOIN MEMBER MEM ON mem.mem_no = m.mem_no
+                LEFT JOIN STUDENT ST ON ST.SMEM_NO = M.MEM_NO
+                LEFT JOIN DEPARTMENT DE ON de.dept_code = st.dept_code
+				LEFT JOIN STATUS S ON M.status_code = S.STATUS_CODE
+		    	LEFT JOIN REJECT R ON M.reject_code = R.REJECT_CODE
+		    	LEFT JOIN SENIOR_COWORKER SE ON SE.SR_NO = M.SR_NO
+		    	WHERE SE.SMEM_NO = #{smemNo}
+		    	AND M.STATUS_CODE = 'STA01'
+			) A
+		) B
+</select>
+	<select id="selectRecord" resultMap="mentorDecisionList" parameterType="String">
+		SELECT 
+	       c.mentee_no, c.mentee_job, c.mentee_com,
+		   c.sr_no, c.status_code, c.reject_code,
+		   c.mentee_date, c.mem_no, e.mem_name, g.dept_name,
+		   s.status_nm, r.reject_reason
+		FROM mentee c
+	    LEFT JOIN STATUS S ON c.status_code = S.STATUS_CODE
+	    LEFT JOIN REJECT R ON c.reject_code = R.REJECT_CODE
+		WHERE
+     		c.MENTEE_NO = #{menteeNo}
+	</select>
+<select id="select" resultMap="mentorDecisionList" parameterType="String">
+		SELECT 
+	       c.mentee_no, c.mentee_job, c.mentee_com,
+		   c.sr_no, c.status_code, c.reject_code,
+		   c.mentee_date, c.mem_no, e.mem_name, g.dept_name
+		FROM mentee c
+		left join member e on e.mem_no = c.mem_no
+		LEFT JOIN STUDENT f ON f.smem_no = e.MEM_NO
+		LEFT JOIN DEPARTMENT g ON f.DEPT_CODE = g.DEPT_CODE
+	WHERE MENTEE_NO = #{menteeNo}
+</select>
+<update id="update" parameterType="MenteeVO">
+	UPDATE MENTEE 
+	SET
+		STATUS_CODE = #{statusCode,jdbcType=VARCHAR},
+		reject_code = #{rejectCode,jdbcType=VARCHAR}
+	WHERE MENTEE_NO = #{menteeNo}
+</update>
+
+<select id="selectStatus" resultType="MenteeVO" parameterType="String">
+	SELECT MENTEE_NO, SR_NO, MENTEE_NO, MEM_NO
+	FROM MENTEE
+	WHERE MENTEE_NO = #{menteeNo} 
+</select>
+</mapper>

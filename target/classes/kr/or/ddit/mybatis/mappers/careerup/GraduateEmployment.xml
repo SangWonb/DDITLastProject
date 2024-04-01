@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.careerup.employment.graduateemployment.dao.GraduateEmploymentDAOS">
+<sql id="searchFrag">
+      <trim prefix="WHERE" prefixOverrides="AND">
+         <if test="not detailCondition.empty">
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+               <choose>
+                  <when test="simpleCondition.searchType eq 'title'">
+                     INSTR(company_nm, #{simpleCondition.searchWord}) > 0
+                  </when>
+                  <when test="simpleCondition.searchType eq 'content'">
+                     INSTR(company_dept, #{simpleCondition.searchWord}) > 0
+                  </when>
+                  <otherwise>
+                     INSTR(company_nm, #{simpleCondition.searchWord}) > 0
+                     OR                     
+                     INSTR(company_dept, #{simpleCondition.searchWord}) > 0
+                  </otherwise>
+               </choose>
+            </if>
+         </if>
+      </trim>
+   </sql>
+	
+<select id="selectTotalRecord" resultType="int">
+	SELECT COUNT(*)
+	FROM SENIOR_COWORKER
+	<include refid="searchFrag"/>
+</select>
+<select id="selectList" resultType="SeniorCoworkerVO" parameterType="kr.or.ddit.utils.paging.PaginationInfo">
+		SELECT B.*
+		FROM(
+			SELECT ROWNUM RNUM, A.*
+			FROM(
+				SELECT 
+			        C.sr_no, C.smem_no, C.company_nm, C.company_dept,
+    				C.company_job, C.company_loc, C.company_type
+    				, D.MEM_NAME, F.DEPT_NAME
+				FROM SENIOR_COWORKER C
+				inner JOIN MEMBER D ON C.smem_no = D.MEM_NO
+				LEFT JOIN STUDENT E ON E.smem_no = D.MEM_NO
+				LEFT JOIN DEPARTMENT F ON E.DEPT_CODE = F.DEPT_CODE
+				<include refid="searchFrag"/>
+			) A
+		) B
+		<![CDATA[
+		WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+		]]>
+</select>
+
+<resultMap type="SeniorCoworkerVO" id="seniorCoworker" autoMapping="true">
+		<id property="smemNo" column="SMEM_NO"/>
+		<collection property="licenseEnroll" ofType="LicenseEnrollVO" javaType="list">
+			<result property="licenCode" column="LICEN_CODE"/>
+			<result property="licenDate" column="LICEN_DATE"/>
+			<result property="licenNo" column="LICEN_NO"/>
+			<association property="license" javaType="LicenseVO" autoMapping="true"></association>
+		</collection>
+</resultMap>
+<select id="select" resultMap="seniorCoworker" parameterType="String">
+
+SELECT 
+    A.SR_NO, A.SMEM_NO, A.COMPANY_NM, A.COMPANY_DEPT
+    , A.COMPANY_JOB, A.COMPANY_LOC, A.COMPANY_TYPE
+    ,C.DEPT_NAME,D.COL_NAME, E.LANG_TYPE, E.LANG_SCORE
+    , F.HONORS_NM, G.IF_COMPANY, G.IF_DATE, H.LICEN_CODE
+    , I.LICEN_NM
+FROM
+    SENIOR_COWORKER A 
+JOIN 
+    STUDENT B ON (A.SMEM_NO=B.SMEM_NO)
+JOIN 
+    DEPARTMENT C ON(B.DEPT_CODE = C.DEPT_CODE)
+JOIN 
+    COLLEGE D ON(C.COL_CODE = D.COL_CODE)
+LEFT OUTER JOIN 
+    LANGUAGE E ON(A.SMEM_NO = E.SMEM_NO)
+LEFT OUTER JOIN 
+    HONORS F ON(A.SMEM_NO = F.SMEM_NO)
+LEFT OUTER JOIN
+    INTERN_PROOF G ON(A.SMEM_NO = G.SMEM_NO)
+LEFT OUTER JOIN
+    LICENSE_ENROLL H ON(A.SMEM_NO = H.SMEM_NO)
+JOIN
+    LICENSE I ON(H.LICEN_CODE=I.LICEN_CODE)
+WHERE A.SR_NO = #{srNo}
+
+<!-- with licView as -->
+<!-- ( -->
+<!-- 	select SMEM_NO, LICEN_CODE, LICEN_DATE, LICEN_NO, LICEN_GRADE, LEN_STATUS, LEN_REJECT -->
+<!-- 	, LICEN_NM, LICEN_AUTH -->
+<!-- 	from license_enroll -->
+<!-- 	inner join license using(licen_code) -->
+<!-- ), -->
+<!-- stuView as -->
+<!-- ( -->
+<!-- 	select * -->
+<!-- 	from  -->
+<!-- 	student  -->
+<!-- 	inner join member on (smem_no=mem_no) -->
+<!-- ), -->
+
+<!-- stu as -->
+<!-- ( -->
+<!-- 	select * -->
+<!-- 	from stuView  -->
+<!-- 	left outer join licView lv using(smem_no) -->
+<!-- ) -->
+<!-- select  -->
+<!-- SMEM_NO, -->
+<!-- SR_NO, -->
+<!-- COMPANY_NM, -->
+<!-- COMPANY_DEPT, -->
+<!-- COMPANY_LOC, -->
+<!-- COMPANY_TYPE, -->
+<!-- LICEN_NM, -->
+<!-- dept_name, -->
+<!-- col_name, -->
+<!-- if_nm, -->
+<!-- if_date, -->
+<!-- if_company, -->
+<!-- lang_nm, -->
+<!-- lang_score, -->
+<!-- HONORS_NM -->
+
+<!-- from senior_coworker  -->
+<!-- inner join stu using(smem_no) -->
+<!-- inner join department using(dept_code) -->
+<!-- inner join college using(col_code) -->
+<!-- left join intern_proof using(smem_no) -->
+<!-- left join language using(smem_no) -->
+<!-- left join honors using(smem_no) -->
+
+<!-- where SR_NO = 'SR00002' -->
+
+<!-- with licView as -->
+<!-- ( -->
+<!-- select LICEN_ENRNO, SMEM_NO, LICEN_CODE, LICEN_DATE, LICEN_NO, GF_NO, LICEN_GRADE, LEN_STATUS, LEN_REJECT -->
+<!-- , LICEN_NM, LICEN_AUTH -->
+<!-- from license_enroll li -->
+<!-- inner join license l using(licen_code) -->
+<!-- ), -->
+
+<!-- stuView as -->
+<!-- ( -->
+<!-- select SMEM_NO, DEPT_CODE -->
+<!-- , MEM_NO -->
+<!-- from  -->
+<!-- student  -->
+<!-- inner join member on (smem_no=mem_no) -->
+<!-- ), -->
+
+<!-- stu as -->
+<!-- ( -->
+<!-- select DEPT_CODE, SMEM_SEMESTER, STU_MNL, STU_MCL, STU_CNL, STU_CCL, STU_JOINYEAR, STU_RECORD, STU_GESTATUS, STU_GTSTATUS, STU_ENROLLNO, STU_YN -->
+<!-- , MEM_NO -->
+<!-- , LICEN_ENRNO, SMEM_NO, LICEN_CODE, LICEN_DATE, LICEN_NO, GF_NO, LICEN_GRADE, LEN_STATUS, LEN_REJECT -->
+<!-- , LICEN_NM, LICEN_AUTH -->
+<!-- from stuView  -->
+<!-- left outer join licView lv using(smem_no) -->
+<!-- ) -->
+<!-- select C.sr_no, C.smem_no, C.company_nm, C.company_dept, -->
+<!-- 		C.company_job, C.company_loc, C.company_type -->
+<!-- 		, D.MEM_NAME, F.DEPT_NAME -->
+<!-- 		, i.if_company, i.if_date -->
+<!-- 		, l.lang_nm, l.lang_score -->
+<!-- 		, h.honors_nm -->
+<!-- 		, col.col_name -->
+<!-- 		, s.licen_nm, s.licen_date, s.licen_no -->
+<!-- from senior_coworker c -->
+<!-- inner join stu s on s.smem_no = c.smem_no  -->
+<!-- LEFT JOIN MEMBER D ON C.smem_no = D.MEM_NO -->
+<!-- LEFT JOIN STUDENT E ON E.smem_no = D.MEM_NO -->
+<!-- LEFT JOIN DEPARTMENT F ON E.DEPT_CODE = F.DEPT_CODE -->
+<!-- LEFT join college col on col.col_code = f.col_code -->
+<!-- LEFT join intern_proof i on i.smem_no = c.smem_no -->
+<!-- LEFT join language l on l.smem_no = c.smem_no -->
+<!-- LEFT join honors h on h.smem_no = c.smem_no -->
+    
+<!-- where SR_NO = #{srNo} -->
+
+
+
+<!-- 	SELECT  -->
+<!--         C.sr_no, C.smem_no, C.company_nm, C.company_dept, -->
+<!-- 		C.company_job, C.company_loc, C.company_type -->
+<!-- 		, D.MEM_NAME, F.DEPT_NAME -->
+<!-- 		, i.if_company, i.if_date -->
+<!-- 		, l.lang_nm, l.lang_score -->
+<!-- 		, h.honors_nm -->
+<!-- 		, col.col_name -->
+<!-- 	FROM SENIOR_COWORKER C -->
+<!-- 	LEFT JOIN MEMBER D ON C.smem_no = D.MEM_NO -->
+<!-- 	LEFT JOIN STUDENT E ON E.smem_no = D.MEM_NO -->
+<!-- 	LEFT JOIN DEPARTMENT F ON E.DEPT_CODE = F.DEPT_CODE -->
+<!-- 	LEFT join college col on col.col_code = f.col_code -->
+<!-- 	LEFT join intern_proof i on i.smem_no = c.smem_no -->
+<!-- 	LEFT join language l on l.smem_no = c.smem_no -->
+<!-- 	LEFT join honors h on h.smem_no = c.smem_no -->
+<!-- 	inner join license_enroll en on en.smem_no = c.smem_no -->
+<!-- 	LEFT join license li on en.licen_code = en.licen_code -->
+<!-- 	WHERE C.SR_NO = #{srNo} -->
+</select>
+</mapper>

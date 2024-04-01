@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.manager.com.book.dao.BookDAO">
+	<sql id="searchFrag">
+		<trim prefix="WHERE" suffixOverrides="AND">
+			<if test="not detailCondition.empty">
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.bookName)">
+					INSTR(BOOK_NAME, #{detailCondition.bookName}) > 0 AND 
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.bookWriter)">
+					BOOK_WRITER = #{detailCondition.bookWriter} AND   
+				</if>
+			</if>
+		</trim>
+	</sql>
+	
+	<select id="selectTotalRecord" resultType="int" parameterType="kr.or.ddit.utils.paging.PaginationInfo">
+		SELECT COUNT(*)
+		FROM BOOK
+		<include refid="searchFrag" />
+	</select>
+	
+	<select id="selectBookList" resultType="BookVO" parameterType="kr.or.ddit.utils.paging.PaginationInfo">
+		SELECT B.*
+		FROM(
+		    SELECT ROWNUM RNUM, A.*
+		    FROM(
+		        SELECT BOOK_CODE, BOOK_NAME, BOOK_WRITER
+		            , BOOK_COMPANY, BOOK_CATEGORY
+		            , BOOK_STATE
+		        FROM BOOK
+		        <include refid="searchFrag" />
+		        ORDER BY BOOK_CODE DESC
+		    ) A
+		) B
+		<![CDATA[
+			WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+		]]>
+	</select>
+	
+	<select id="selectBook" resultType="BookVO" parameterType="string">
+		SELECT BOOK_CODE, BOOK_NAME, BOOK_WRITER, BOOK_COMPANY, BOOK_CATEGORY, BOOK_STATE, BOOK_CONTENT
+		FROM BOOK
+		WHERE BOOK_CODE = #{BOOK_CODE}
+	</select>
+	
+	<insert id="insertBook" parameterType="BookVO">
+	    <selectKey order="BEFORE" keyProperty="bookCode" resultType="string">
+		SELECT 
+		    TO_CHAR(SYSDATE,'YYYYMMDD') || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(BOOK_CODE),9)),0) + 1, 4, '0')
+		FROM 
+		    BOOK
+		WHERE 
+		    SUBSTR(BOOK_CODE,1,8) = TO_CHAR(SYSDATE,'YYYYMMDD')
+	    </selectKey>
+	    INSERT INTO BOOK (
+	        BOOK_CODE
+	        , BOOK_NAME
+	        , BOOK_WRITER
+	        , BOOK_COMPANY
+	        , BOOK_CATEGORY
+	        , BOOK_STATE
+	        , BOOK_CONTENT
+	    ) VALUES (
+	        #{bookCode,jdbcType=VARCHAR}
+	        , #{bookName,jdbcType=VARCHAR}
+	        , #{bookWriter,jdbcType=VARCHAR}
+	        , #{bookCompany,jdbcType=VARCHAR}
+	        , #{bookCategory,jdbcType=VARCHAR}
+	        , #{bookState,jdbcType=CHAR}
+	        , #{bookContent,jdbcType=VARCHAR}
+	    )
+	</insert>
+	
+	<update id="updateBook" parameterType="BookVO">
+	    UPDATE BOOK
+	    SET
+	        BOOK_NAME = #{bookName, jdbcType=VARCHAR},
+	        BOOK_WRITER = #{bookWriter, jdbcType=VARCHAR},
+	        BOOK_COMPANY = #{bookCompany, jdbcType=VARCHAR},
+	        BOOK_CATEGORY = #{bookCategory, jdbcType=VARCHAR},
+	        BOOK_STATE = #{bookState, jdbcType=CHAR},
+	        BOOK_CONTENT = #{bookContent, jdbcType=VARCHAR}
+	    WHERE BOOK_CODE = #{bookCode, jdbcType=VARCHAR}
+	</update>
+	
+	<delete id="deleteBook">
+	    DELETE 
+	    FROM BOOK
+	    WHERE BOOK_CODE = #{bookCode}
+	</delete>
+	
+</mapper>

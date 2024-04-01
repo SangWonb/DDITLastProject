@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.professor.cyber.task.dao.TaskSubmitDAO">
+	
+	<resultMap type="TaskSubmitVO" id="taskSubmitMap" autoMapping="true">
+		<id property="smemNo" column="smem_no"/>
+		<association property="student" javaType="StudentVO" autoMapping="true" >
+			<id property="smemNo" column="smem_no"/>		
+			<result property="memName" column="mem_name"/>		
+			<result property="deptCode" column="dept_code"/>		
+			<result property="deptName" column="dept_name"/>		
+		</association>
+	</resultMap>
+	
+	<select id="selectTaskSubmitList" parameterType="String" resultMap="taskSubmitMap">
+		SELECT TS.task_code,TS.gf_no,TS.task_reply,TS.task_score,TS.smem_no,TS.submit_status,
+        M.mem_no,M.mem_name,S.dept_code, D.dept_name
+		FROM task_submit TS 
+            INNER JOIN member M on (TS.smem_no = M.mem_no)
+            INNER JOIN student S on (TS.smem_no = S.smem_no)
+            INNER JOIN department D on (S.dept_code = D.dept_code)
+		WHERE task_code = #{taskCode}
+	</select>
+	
+	<resultMap type="TaskSubmitVO" id="taskSubmitFileMap" autoMapping="true">
+		<id property="taskCode" column="task_code"/>
+		<id property="smemNo" column="smem_no"/>
+		<collection property="fileList" javaType="list" ofType="FileVO" autoMapping="true">
+			<id property="fileNo" column="file_no"/>
+		</collection>
+	</resultMap>
+	
+	<select id="selectTaskSubmit" parameterType="String" resultMap="taskSubmitFileMap">
+		SELECT TS.task_code,TS.gf_no,TS.task_reply,TS.task_score,TS.smem_no,TS.submit_status, 
+		    F.file_no,F.file_nm,F.file_save,F.mime,F.file_size,F.fancy_size,F.gf_no
+		FROM task_submit TS LEFT OUTER JOIN "FILE" F on(TS.gf_no = F.gf_no)
+		WHERE TS.task_code = #{taskCode} AND TS.smem_no = #{smemNo}
+	</select>
+	
+	<insert id="insertTaskSubmit" parameterType="TaskSubmitVO">
+		INSERT INTO task_submit (
+		    task_code,
+		    gf_no,
+		    smem_no
+		) VALUES (
+		    #{taskCode,jdbcType=VARCHAR}
+			, #{gfNo,jdbcType=VARCHAR}
+			, #{smemNo,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<update id="taskEvaluation" parameterType="TaskSubmitVO">
+		UPDATE task_submit
+		SET
+		    task_reply = #{taskReply,jdbcType=VARCHAR}
+			,task_score = #{taskScore,jdbcType=NUMERIC}
+		WHERE
+	        task_code = #{taskCode,jdbcType=VARCHAR}
+	        AND smem_no = #{smemNo,jdbcType=VARCHAR}
+	</update>
+	
+	<update id="taskSubmit" parameterType="String">
+		UPDATE task_submit
+		SET
+		    submit_status =  #{submitStatus}
+		WHERE
+	        task_code = #{taskCode,jdbcType=VARCHAR}
+	        AND smem_no = #{smemNo,jdbcType=VARCHAR}
+	</update>
+	
+	<select id="taskNotEvaluationCount" parameterType="String" resultType="int">
+		SELECT count(*)
+		FROM task_submit TS 
+		WHERE task_code = #{taskCode}
+		AND TS.task_score is null
+	</select>
+	
+	<update id="updateTaskSubmitScore" parameterType="TaskSubmitVO">
+		UPDATE task_submit
+		SET
+			task_score = #{taskScore,jdbcType=NUMERIC}
+		WHERE
+	        task_code = #{taskCode,jdbcType=VARCHAR}
+	        AND smem_no = #{smemNo,jdbcType=VARCHAR}
+	</update>
+	
+</mapper>

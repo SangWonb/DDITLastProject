@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.careerup.licenseauto.dao.LicenseAutoDAO">
+	
+	<select id="findLicenCode" parameterType="String" resultType="String">
+		SELECT licen_code
+		FROM LICENSE
+		WHERE licen_nm = #{licenNm}
+	</select>
+	
+	<insert id="LicenseAutoAdd" parameterType="LicenseEnrollVO">
+		<selectKey order="BEFORE" keyProperty="licenEnrno" resultType="String">
+			SELECT 'LEN'|| to_char(NVL(MAX(to_number(substr(licen_enrno,4))), to_char(SYSDATE,'YYMMDD')||'000')+1)
+			FROM LICENSE_ENROLL
+			WHERE substr(licen_enrno,4,6) = to_char(SYSDATE,'YYMMDD')
+		</selectKey>
+		INSERT INTO license_enroll (
+		    licen_enrno,
+		    smem_no,
+		    licen_code,
+		    licen_date,
+		    licen_no
+		) VALUES (
+		    #{licenEnrno}
+			, #{smemNo}
+			, #{licenCode}
+			, #{licenDate}
+			, #{licenNo}
+		)
+	</insert>
+	
+</mapper>

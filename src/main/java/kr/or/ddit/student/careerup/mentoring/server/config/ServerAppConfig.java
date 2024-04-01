@@ -1,0 +1,41 @@
+package kr.or.ddit.student.careerup.mentoring.server.config;
+
+import java.util.Map;
+
+import javax.websocket.server.ServerEndpointConfig.Configurator;
+
+import org.springframework.web.context.ContextLoader;
+import org.springframework.web.context.WebApplicationContext;
+
+/**
+ * @Class Name : ServerAppConfig.java
+ * @Description : EndPoint를 bean으로 담기 위해 설정하는 Configurator(다른 Bean과 연동 시
+ *              EndPoint에 설정해주어야 함)
+ */
+//container안의 bean을 DI하기 위해 사용
+public class ServerAppConfig extends Configurator {
+
+	@Override
+	public <T> T getEndpointInstance(Class<T> endpointClass) throws InstantiationException {
+		System.err.println("41195615691691"+endpointClass);
+		WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
+		if (wac == null) {
+			throw new IllegalStateException(
+					"Failed to find WebApplicationContext. Was org.springframework.web.context.ContextLoader used to load the WebApplicationContext?");
+		}
+
+		Map<String, T> beans = wac.getBeansOfType(endpointClass);
+		System.err.println("beansServer"+beans);
+		if (beans.isEmpty()) {
+			// Initialize a new bean instance
+			return wac.getAutowireCapableBeanFactory().createBean(endpointClass);
+		}
+		if (beans.size() == 1) {
+			// Return the matching bean instance
+			return beans.values().iterator().next();
+		} else {
+			// This should never happen (@ServerEndpoint has a single path mapping) ..
+			throw new IllegalStateException("Found more than one matching beans of type " + endpointClass);
+		}
+	}
+}

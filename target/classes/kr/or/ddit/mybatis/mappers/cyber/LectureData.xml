@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.professor.cyber.lecturematerial.dao.LectureDataDAOP">
+<sql id="searchFrag">
+      <trim prefix="AND" prefixOverrides="AND">
+         <if test="not paging.detailCondition.empty">
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(paging.simpleCondition.searchWord)">
+               <choose>
+                  <when test="paging.simpleCondition.searchType eq 'lecDataname'">
+                     INSTR(LEC_DATANAME, #{paging.simpleCondition.searchWord}) > 0
+                  </when>
+                  <when test="paging.simpleCondition.searchType eq 'lecDatacontent'">
+                     INSTR(LEC_DATACONTENT, #{paging.simpleCondition.searchWord}) > 0
+                  </when>
+                  <otherwise>
+                     (INSTR(LEC_DATANAME, #{paging.simpleCondition.searchWord}) > 0
+                     OR                     
+                     INSTR(LEC_DATACONTENT, #{paging.simpleCondition.searchWord}) > 0)
+                  </otherwise>
+               </choose>
+            </if>
+         </if>
+      </trim>
+   </sql>
+
+<resultMap type="LectureDataVO" id="dataMap" autoMapping="true">
+	<id property="lecDatano" column="LEC_DATANO"/>
+	<collection property="fileList" javaType="list" ofType="FileVO" autoMapping="true">
+		<id property="fileNo" column="file_no"/>
+	</collection>
+</resultMap>
+
+<select id="selectTotalRecord" resultType="int" parameterType="String">
+	SELECT COUNT(*)
+	FROM LECTURE_DATA
+	WHERE LEC_CODE = #{lecCode}
+	<include refid="searchFrag"/>
+</select>
+<select id="selectLectureDataList" resultType="LectureDataVO">
+	SELECT B.*
+		FROM(
+			SELECT ROWNUM RNUM, A.*
+			FROM(
+				SELECT 
+				  LEC_DATANO, LEC_CODE, GF_NO, LEC_DATANAME, LEC_DATACONTENT, LEC_DATE, MEM_NAME
+				FROM LECTURE_DATA
+				WHERE LEC_CODE = #{lecCode}
+				<include refid="searchFrag"/>
+			) A
+		) B
+		<![CDATA[
+		WHERE RNUM >= #{paging.startRow} AND RNUM <= #{paging.endRow}
+		]]>
+</select>
+<select id="selectLectureData" resultMap="dataMap" parameterType="String">
+	SELECT 
+		d.LEC_DATANO, d.LEC_CODE, d.GF_NO, d.LEC_DATANAME, d.LEC_DATACONTENT, d.LEC_DATE, d.MEM_NAME
+		,F.file_no,F.file_nm,F.file_save,F.mime,F.file_size,F.fancy_size,F.gf_no
+	FROM LECTURE_DATA d
+	LEFT OUTER JOIN "FILE" F on d.gf_no = F.gf_no
+	WHERE LEC_DATANO = #{lecDatano}
+</select>
+<update id="updateLectureData" parameterType="LectureDataVO">
+	UPDATE LECTURE_DATA
+SET 
+    LEC_DATANO = #{lecDatano,jdbcType=VARCHAR},
+    LEC_DATANAME = #{lecDataname,jdbcType=VARCHAR},
+    LEC_DATACONTENT = #{lecDatacontent,jdbcType=VARCHAR},
+    GF_NO = #{gfNo,jdbcType=VARCHAR}
+WHERE
+    LEC_DATANO = #{lecDatano}
+</update>
+
+<insert id="insertLectureData" parameterType="LectureDataVO">
+	<selectKey order="BEFORE" keyProperty="lecDatano" resultType="String">
+		SELECT 'LD' || LPAD(TO_CHAR(NVL(MAX(to_number(substr(LEC_DATANO,3))), 0)+1), 5, '0')   
+		FROM LECTURE_DATA
+	</selectKey>
+	INSERT INTO LECTURE_DATA(   
+	    LEC_DATANO, LEC_CODE, GF_NO, LEC_DATANAME, LEC_DATACONTENT, LEC_DATE, MEM_NAME
+    	)
+		VALUES
+		(
+        #{lecDatano,jdbcType=VARCHAR},
+		#{lecCode,jdbcType=VARCHAR},
+		#{gfNo,jdbcType=VARCHAR},
+		#{lecDataname,jdbcType=VARCHAR},
+		#{lecDatacontent,jdbcType=VARCHAR},
+		SYSDATE,
+		#{memName,jdbcType=VARCHAR}
+		)
+</insert>
+<delete id="deleteLectureData" parameterType="String">
+	delete from LECTURE_DATA
+	where LEC_DATANO = #{lecDatano}
+</delete>
+</mapper>

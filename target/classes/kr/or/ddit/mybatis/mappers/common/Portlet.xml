@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.dao.PortletDAOCC">
+
+
+<select id="selectMember" resultType="MemberVO">
+
+SELECT M.MEM_NAME,D.DEPT_NAME,S.STU_MNL,S.STU_MCL,S.STU_CNL,S.STU_CCL
+
+FROM
+MEMBER M ,
+STUDENT S,
+DEPARTMENT D
+
+WHERE
+M.MEM_NO = S.SMEM_NO
+AND S.DEPT_CODE = D.DEPT_CODE
+AND MEM_NO = #{memNo}
+
+</select>
+
+<select id="selectListP">
+
+SELECT X,Y,W,H,PORT_CODE,CONTENT
+
+FROM 
+PORTLET
+WHERE
+MEM_NO = #{memNo}
+
+
+</select>
+
+<delete id="delete" >
+DELETE FROM PORTLET
+WHERE MEM_NO = #{memNo}
+</delete>
+
+
+</mapper>

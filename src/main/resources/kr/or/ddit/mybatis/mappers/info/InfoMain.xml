@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.info.dao.InfoMainDAO">
+	<select id="selectAList" resultType="CalendarVO">
+		SELECT
+		    cldr_code,
+		    cldr_type,
+		    mem_no,
+		    cldr_memo,
+		    cldr_start,
+		    cldr_end,
+		    cldr_color,
+		    dept_code,
+		    time_start,
+		    time_end
+		FROM
+		    calendar 
+		where
+		    cldr_code like 'A%'
+	</select>
+
+</mapper>

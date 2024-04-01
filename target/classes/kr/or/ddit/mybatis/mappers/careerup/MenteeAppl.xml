@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.careerup.mentoring.mentoringmentee.dao.MenteeApplDAOS">
+
+	<resultMap type="MenteeVO" id="menteeApplList" autoMapping="true">
+		<id property = "menteeNo" column="MENTEE_NO"/>
+		<association property="seniorCoworker" javaType="hashmap">
+			<result property="srNo" column="SR_NO"/>
+			<result property="companyNm" column="COMPANY_NM"/>
+			<result property="companyDept" column="COMPANY_DEPT"/>
+			<result property="companyJob" column="COMPANY_JOB"/>
+			<result property="companyLoc" column="COMPANY_LOC"/>
+			<result property="companyType" column="COMPANY_TYPE"/>
+			<result property="deptName" column="DEPT_NAME"/>
+			<result property="memName" column="MEM_NAME"/>
+		</association>
+		<association property="status" javaType="hashmap">
+			<result property="statusCode" column="STATUS_CODE"/>
+			<result property="statusNm" column="STATUS_NM"/>
+		</association>
+		<association property="reject" javaType="hashmap">
+        	<result property="rejectCode" column="REJECT_CODE"/>
+        	<result property="rejectReason" column="REJECT_REASON"/>
+    	</association>
+	</resultMap>
+	
+<!-- <select id="selectTotalRecord" parameterType="int"> -->
+<!-- 	SELECT COUNT(*) -->
+<!-- 	FROM MENTEE -->
+<!-- </select> -->
+<select id="selectMenteeList" resultMap="menteeApplList" parameterType="String">
+		SELECT B.*
+		FROM(
+			SELECT ROWNUM RNUM, A.*
+			FROM(
+				SELECT 
+			       c.mentee_no, c.mentee_job, c.mentee_com,
+				   c.sr_no, c.status_code, c.reject_code,
+				   c.mentee_date, c.mem_no, e.mem_name, g.dept_name, R.REJECT_REASON,
+		        	s.status_nm
+				FROM mentee c
+				left join SENIOR_COWORKER d on c.sr_no = d.sr_no
+				left join member e on e.mem_no = d.smem_no
+				LEFT JOIN STUDENT f ON f.smem_no = e.MEM_NO
+				LEFT JOIN DEPARTMENT g ON f.DEPT_CODE = g.DEPT_CODE
+				LEFT JOIN STATUS S ON c.status_code = S.STATUS_CODE
+		    	LEFT JOIN REJECT R ON c.reject_code = R.REJECT_CODE
+			) A
+		) B
+		<![CDATA[
+		WHERE mem_no = #{memNo}
+		]]>
+</select>
+	<select id="selectRecord" resultMap="menteeApplList" parameterType="String">
+		SELECT 
+	       c.mentee_no, c.mentee_job, c.mentee_com,
+		   c.sr_no, c.status_code, c.reject_code,
+		   c.mentee_date, c.mem_no, e.mem_name, g.dept_name,
+		   s.status_nm, r.reject_reason
+		FROM mentee c
+	    LEFT JOIN STATUS S ON c.status_code = S.STATUS_CODE
+	    LEFT JOIN REJECT R ON c.reject_code = R.REJECT_CODE
+		WHERE
+     		c.MENTEE_NO = #{menteeNo}
+	</select>
+<select id="select" resultMap="menteeApplList" parameterType="String">
+	SELECT
+		M.mentee_no, M.mentee_job, M.mentee_com,
+		M.sr_no, M.status_code, M.reject_code,
+		M.mentee_date, M.mem_no, ME.MEM_NAME
+		, S.COMPANY_NM, S.COMPANY_DEPT, S.COMPANY_JOB,
+		S.COMPANY_LOC, S.COMPANY_TYPE, D.DEPT_NAME
+	FROM mentee M
+	LEFT JOIN SENIOR_COWORKER S ON S.SR_NO = M.SR_NO
+	LEFT JOIN MEMBER ME ON ME.MEM_NO = S.SMEM_NO
+    LEFT JOIN STUDENT ST ON ST.SMEM_NO = S.SMEM_NO
+    LEFT JOIN DEPARTMENT D ON D.DEPT_CODE = st.DEPT_CODE
+	WHERE MENTEE_NO = #{menteeNo}
+</select>
+<insert id="insert" parameterType="MenteeVO">
+	<selectKey order="BEFORE" keyProperty="menteeNo" resultType="String">
+		SELECT 'MEN' || LPAD(TO_CHAR(NVL(MAX(to_number(substr(MENTEE_NO,4))), 0)+1), 5, '0')   
+		FROM MENTEE
+	</selectKey>
+	INSERT INTO MENTEE(   
+	    mentee_no,  mentee_job, mentee_com,
+	    sr_no, mem_no
+    	)
+		VALUES
+		(
+        #{menteeNo ,jdbcType=VARCHAR}
+		, #{menteeJob,jdbcType=VARCHAR}
+		, #{menteeCom,jdbcType=VARCHAR}
+		, #{srNo,jdbcType=VARCHAR}
+		, #{memNo,jdbcType=VARCHAR}
+		)
+</insert>
+<update id="update" parameterType="MenteeVO">
+	UPDATE MENTEE 
+	SET
+		mentee_job = #{menteeJob,jdbcType=VARCHAR} ,
+		mentee_com = #{menteeCom,jdbcType=VARCHAR} 
+	WHERE MENTEE_NO = #{menteeNo}
+</update>
+<delete id="delete" parameterType="String">
+	DELETE FROM mentee WHERE MENTEE_NO = #{menteeNo}
+</delete>
+</mapper>

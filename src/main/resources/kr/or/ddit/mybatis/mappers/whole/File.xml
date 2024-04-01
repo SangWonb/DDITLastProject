@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.utils.file.dao.FileDAO">
+	
+	<!-- 파일 저장시 사용할 gfNo 조회 -->
+	<select id="selectGFNO" resultType="String">
+		SELECT
+		    'GF' || LPAD(MAX(to_number(substr(gf_no,3)))+1,6,'0')
+		FROM
+		    group_file
+		WHERE gf_no like 'GF%'
+	</select>
+	
+	<insert id="insertGroupFile" parameterType="String">
+		INSERT INTO group_file ( gf_no ) VALUES ( #{gfNo,jdbcType=VARCHAR} )
+	</insert>
+	
+	<!-- 파일 저장 -->
+	<insert id="insertFile" parameterType="FileVO">
+		<selectKey order="BEFORE" keyProperty="fileNo" resultType="String">
+			SELECT 'F'|| to_char(NVL(MAX(to_number(substr(file_no,2))), to_char(SYSDATE,'YYMMDD')||'0000')+1)
+			FROM "FILE"
+			WHERE substr(file_no,2,6) = to_char(SYSDATE,'YYMMDD')
+		</selectKey>
+		INSERT INTO "FILE" (
+		    file_no,
+		    file_nm,
+		    file_save,
+		    mime,
+		    file_size,
+		    fancy_size,
+		    gf_no
+		) VALUES (
+		    #{fileNo,jdbcType=VARCHAR}
+		    , #{fileNm,jdbcType=VARCHAR}
+		    , #{fileSave,jdbcType=VARCHAR}
+		    , #{mime,jdbcType=VARCHAR}
+		    , #{fileSize,jdbcType=NUMERIC}
+		    , #{fancySize,jdbcType=VARCHAR}
+		    , #{gfNo,jdbcType=VARCHAR}
+		)
+	</insert>
+
+	<!-- 파일 조회 gfno단위 -->
+	<select id="selectFiles" resultType="FileVO">
+		SELECT
+		    file_no,file_nm,file_save,mime,
+		    file_size,fancy_size,gf_no
+		FROM
+		    "FILE"
+		WHERE
+			gf_no = #{gfNo,jdbcType=VARCHAR}
+	</select>
+	
+	<select id="selectFile" resultType="FileVO">
+		SELECT
+		    file_no,file_nm,file_save,mime,
+		    file_size,fancy_size,gf_no
+		FROM
+		    "FILE"
+		WHERE
+			file_no = #{fileNo,jdbcType=VARCHAR}	
+	</select>
+	
+	<!-- 파일 하나 삭제 -->
+	<delete id="deleteFile" parameterType="String">
+		DELETE FROM "FILE"
+		WHERE file_no = #{fileNo,jdbcType=VARCHAR}
+	</delete>
+	
+	<!-- 파일 전체 삭제 -->
+	<delete id="deleteFiles" parameterType="String">
+		DELETE FROM "FILE"
+		WHERE gf_no = #{gfNo,jdbcType=VARCHAR}
+	</delete>
+	
+	<delete id="deleteFolder" parameterType="String">
+		DELETE FROM GROUP_FILE
+		WHERE gf_no = #{gfNo,jdbcType=VARCHAR}
+	</delete>
+	
+</mapper>

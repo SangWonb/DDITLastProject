@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.manager.pro.lecture.dao.BuildingAndRoomDAO">
+<select id="selectBuildingNoList" resultType="BuildingVO">
+	SELECT DISTINCT BUILDING_NO, ROOM_NO
+	FROM BUILDING
+</select>
+<select id="selectRoomNoList" resultType="BuildingVO">
+	SELECT DISTINCT ROOM_NO
+	FROM BUILDING
+</select>
+</mapper>

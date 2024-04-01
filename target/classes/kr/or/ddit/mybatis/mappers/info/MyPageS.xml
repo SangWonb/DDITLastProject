@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.info.mypage.dao.MyPageSDAO">
+
+	<resultMap type="hashMap" id="deptInfo" autoMapping="true" >
+		<id property="deptCode" column="DEPT_CODE"/>
+		<association property="colInfo" javaType="hashmap">
+				<result property="colName" column="COL_NAME"/>
+		</association>
+	</resultMap>
+
+	<resultMap type="StudentVO" id="myInfo" autoMapping="true">
+		<id property="smemNo" column="SMEM_NO"/>
+		<association property="deptInfo" resultMap="deptInfo"/>
+		<association property="acaInfo" javaType="hashMap">
+			<result property="acName" column="AC_NAME"/>
+		</association>
+		<association property="commonInfo" javaType="hashMap">
+			<result property="name" column="NAME"/>
+			<result property="value" column="VALUE"/>
+			<result property="more" column="MORE"/>
+			<result property="name" column="NOTE"/>
+		</association>
+	</resultMap>
+
+	<select id="selectMyInfo" parameterType="String" resultMap="myInfo">
+		SELECT
+		    B.MEM_NAME,
+		    B.MEM_PASS, 
+		    B.MEM_TEL, 
+		    B.MEM_ADDR1,
+		    B.MEM_ADDR2, 
+		    B.MEM_EMAIL,
+		    CASE
+		        WHEN SUBSTR(B.MEM_REG1, 1, 1) = '0' THEN '20' || SUBSTR(B.MEM_REG1, 1, 2)
+		        ELSE '19' || SUBSTR(B.MEM_REG1, 1, 2)
+		    END || '-' || SUBSTR(B.MEM_REG1, 3, 2) || '-' || SUBSTR(B.MEM_REG1, 5, 2) || '('|| 
+            CASE
+                WHEN SUBSTR(B.MEM_REG2, 1, 1) = '1' OR SUBSTR(B.MEM_REG2, 1, 1) = '3' THEN '남'
+                ELSE '여'
+            END ||')' AS BAS,
+            TO_CHAR(A.STU_CHANGE,'YYYY-MM-DD')||'('||E.AC_NAME||')' AS STU_CHANGE2,
+            B.MEM_REG1||'-'||SUBSTR(B.MEM_REG2,1,1)||RPAD('*',6,'*') AS MEM_REG1,
+		    B.MEM_BANK, 
+		    B.MEM_BANKNUM, 
+		    B.GF_NO, 
+		    B.MEM_DEPO,
+            '학사'||A.STU_GR||'학년('||F.VALUE||')'||E.AC_NAME AS STU_PROG,
+		    A.smem_no, A.dept_code,D.COL_NAME||' '||C.DEPT_NAME CAD, 
+		    F.VALUE,
+		    A.stu_record,
+		    E.AC_NAME, 
+		    A.stu_yn,
+		    A.STU_GR||'학년' AS STU_GR,
+            A.STU_JOINYEAR ||  (SELECT VALUE FROM COMMON WHERE NAME = 'AC07')||'(입학)' AS STU_JOINYEAR
+		FROM
+		    student A
+		JOIN
+		    MEMBER B ON A.SMEM_NO = B.MEM_NO
+        JOIN 
+            DEPARTMENT C ON A.DEPT_CODE =C.DEPT_CODE
+        JOIN 
+            COLLEGE D ON C.COL_CODE = D.COL_CODE
+        JOIN 
+            ACADEMIC_CLASSIFICATION E ON A.STU_RECORD=E.AC_CODE
+        JOIN 
+            COMMON F ON A.SMEM_SEMESTER = F.NAME
+		WHERE 
+			A.SMEM_NO =#{memNo}
+	</select>
+	
+	<update id="update" parameterType="MemberVO">
+		UPDATE 
+		    MEMBER
+		SET 
+		    MEM_PASS = #{memPass},
+		    MEM_TEL = #{memTel}, 
+		    MEM_ADDR1 = #{memAddr1},
+		    MEM_ADDR2= #{memAddr2}, 
+		    MEM_EMAIL= #{memEmail},
+		    MEM_BANK=#{memBank},
+		    MEM_BANKNUM=#{memBanknum},
+		    GF_NO=#{gfNo}
+		WHERE
+		    MEM_NO=#{memNo}
+	</update>
+</mapper>

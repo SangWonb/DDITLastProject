@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="kr.or.ddit.student.careerup.employment.graduateemployment.dao.GraduateEmploymentChartDAOS">
+	
+<select id="companyType" resultType="SeniorCoworkerVO">
+SELECT COMPANY_TYPE, COUNT(COMPANY_TYPE) AS count FROM SENIOR_COWORKER GROUP BY COMPANY_TYPE
+</select>
+<select id="companyLoc" resultType="SeniorCoworkerVO">
+SELECT COMPANY_LOC, COUNT(COMPANY_LOC) AS count FROM SENIOR_COWORKER GROUP BY COMPANY_LOC
+</select>
+<select id="companyJob" resultType="SeniorCoworkerVO">
+SELECT COMPANY_JOB, COUNT(COMPANY_JOB) AS count FROM SENIOR_COWORKER GROUP BY COMPANY_JOB
+</select>
+</mapper>

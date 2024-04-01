@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.careerup.licenserecom.dao.DeptAndSeniorDAO">
+
+<select id="selectDeptList" resultType="DepartmentVO">
+SELECT DEPT_CODE, DEPT_NAME
+FROM DEPARTMENT
+</select>
+<select id="selectSeniorJobList" resultType="SeniorCoworkerVO">
+SELECT DISTINCT COMPANY_JOB 
+FROM SENIOR_COWORKER
+</select>
+<select id="selectSeniorCompanyTypeList" resultType="SeniorCoworkerVO">
+SELECT DISTINCT company_type
+FROM senior_coworker
+</select>
+
+</mapper>

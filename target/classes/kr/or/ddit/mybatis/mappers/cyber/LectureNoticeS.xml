@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="kr.or.ddit.student.cyber.lecturenotice.dao.LectureNoticeDAOS">
+
+	<select id="selectTotalRecord">
+		SELECT
+		COUNT(*)
+		FROM
+		LECTURE_ANNOUNCEMENT
+		WHERE
+		LECANN_NO LIKE 'LA%'
+	</select>
+
+	<select id="selectListAnnoun" resultType="LectureAnnouncementVO"
+		parameterType="String">
+		SELECT
+		LECANN_NO,LEC_CODE,LECANN_TITLE,LECANN_CONTENT,GF_NO,LECANN_DATE,MEM_NAME
+		,ROWNUM RNUM
+		FROM
+		LECTURE_ANNOUNCEMENT
+
+
+		WHERE LEC_CODE = #{lecCode}
+
+
+	</select>
+	
+	<select id="select">
+SELECT
+    lecann_no,
+    lec_code,
+    lecann_title,
+    lecann_content,
+    gf_no,
+    lecann_date,
+    mem_name
+FROM
+    lecture_announcement
+    where LECANN_NO = #{lecannNo}
+	
+	</select>
+
+	<select id="selectTodayRecord">
+		SELECT
+		COUNT(LECANN_NO)
+		FROM
+		LECTURE_ANNOUNCEMENT
+		WHERE
+		LECANN_NO LIKE 'LA%'
+		AND
+		LECANN_DATE = SYSDATE
+	</select>
+
+	<insert id="insertNotice" parameterType="LectureAnnouncementVO">
+		<selectKey order="BEFORE" keyProperty="lecannNo"
+			resultType="string">
+			SELECT 'LA' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX_CODE, 3)), 0) + 1, 5, '0')
+			FROM (
+			SELECT MAX(LECANN_NO) AS MAX_CODE
+			FROM LECTURE_ANNOUNCEMENT
+			)
+		</selectKey>
+		INSERT INTO lecture_announcement (
+		lecann_no,
+		lec_code,
+		lecann_title,
+		lecann_content,
+		gf_no,
+		lecann_date,
+		mem_name
+		) VALUES (
+		#{lecannNo},
+		#{lecCode},
+		#{lecannTitle},
+		#{lecannContent},
+		#{gfNo},
+		SYSDATE,
+		#{memName}
+		)
+	</insert>
+
+
+<update id="update">
+UPDATE lecture_announcement
+		SET
+		LECANN_TITLE = #{lecannTitle,
+		jdbcType=VARCHAR},
+		lecann_CONTENT = #{lecannContent, jdbcType=VARCHAR}
+		WHERE
+		lecann_no = #{lecannNo, jdbcType=VARCHAR}
+
+</update>
+
+<delete id="delete">
+DELETE FROM lecture_announcement
+WHERE LECANN_NO = #{lecannNo}
+</delete>
+
+</mapper>

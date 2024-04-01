@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="kr.or.ddit.student.cyber.onlinelecture.dao.OnlineLectureDAOS">
+
+
+	<select id="selectTotalRecord">
+		SELECT
+		COUNT(*)
+		FROM
+		LECTURE_ONLINE
+		WHERE
+		LECO_CODE
+		LIKE
+		'LECO%'
+	</select>
+	<resultMap type="LectureOnlineVO" id="lectureMap"
+		autoMapping="true">
+		<id property="lecoCode" column="LECO_CODE" />
+		<collection property="fileList" javaType="list"
+			ofType="FileVO" autoMapping="true">
+			<id property="fileNo" column="file_no" />
+		</collection>
+	</resultMap>
+
+	<select id="select" resultMap="lectureMap"
+		parameterType="String">
+		SELECT
+		l.leco_code,
+		l.gf_no,
+		l.mem_name,
+		l.leco_content,
+		l.leco_title,
+		l.lec_code,
+		l.lec_time,
+		l.leco_date,
+		F.file_no,
+		F.file_nm,
+		F.file_save,
+		F.mime,
+		F.file_size,
+		F.fancy_size,
+		F.gf_no
+		FROM
+		lecture_online
+		l
+		INNER JOIN "FILE" F ON l.gf_no = F.gf_no
+
+		where
+		LECO_CODE
+		= #{lecoCode}
+	</select>
+
+
+
+	<select id="selectListLecture">
+		SELECT
+		LECO_CODE,LEC_TIME,GF_NO,LEC_CODE,LECO_DATE,
+		MEM_NAME,ROWNUM RNUM,LECO_TITLE,LECO_CONTENT
+		FROM
+		LECTURE_ONLINE
+
+		WHERE
+		LEC_CODE = #{lecCode}
+
+	</select>
+
+
+	<insert id="insertAttend" parameterType="AttendVO">
+		<selectKey order="BEFORE" keyProperty="atNo"
+			resultType="string">
+			SELECT 'AT' || LPAD(NVL(MAX(TO_NUMBER(SUBSTR(AT_NO,
+			5))), 0) + 1, 7,
+			'0')
+			FROM ATTEND
+		</selectKey>
+	INSERT INTO attend (
+    at_no,
+    at_code,
+    at_date,
+    smem_no,
+    lec_code
+) VALUES (
+  #{atNo,jdbcType=VARCHAR}
+, #{atCode,jdbcType=VARCHAR}
+, #{atDate,jdbcType=VARCHAR}
+, #{smemNo,jdbcType=VARCHAR}
+, #{lecCode,jdbcType=VARCHAR}
+)
+
+
+	</insert>
+
+	<delete id="delete">
+		DELETE FROM lecture_online
+		WHERE leco_code =
+		#{lecoCode}
+	</delete>
+
+
+	<update id="update">
+		UPDATE lecture_online
+		SET
+		leco_title =
+		#{lecoTitle,
+		jdbcType=VARCHAR},
+		leco_content = #{lecoContent,
+		jdbcType=VARCHAR}
+
+		WHERE
+		leco_code = #{lecoCode, jdbcType=VARCHAR}
+
+	</update>
+
+	<update id="updateFile">
+		UPDATE "FILE"
+		SET
+		file_nm = #{fileNm},
+		file_save =
+		#{fileSave},
+		mime = #{mime},
+		file_size = #{fileSize},
+		fancy_size =
+		#{fancySize}
+		WHERE
+		file_no = #{fileNo}
+	</update>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</mapper>

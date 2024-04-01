@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.board.clubboard.dao.ClubBoardDAO">
+	<select id="selectClubRecom" resultType="ClubRecomVO" parameterType="ClubRecomVO">
+		SELECT
+    		MBTI,SEX,SUB,FIRST,SECOND,THIRD	
+		FROM
+   			CLUB_RECOM 
+		WHERE 
+		    MBTI = #{mbti}
+		AND
+		    SEX = #{sex}
+		AND
+		    SUB = #{sub}
+	</select>
+	<select id="selectList" resultType="ClubVO">
+		SELECT ROWNUM RNUM
+		        ,CLUB_NO,CLUB_NAME,CLUB_CATEGORY
+		        ,CLUB_DATE,CLUB_LEADER,CLUB_CONTENT
+		        ,CLUB_GF, CLUB_VIEWS, CLUB_MEM
+		FROM 
+		    CLUB 
+		WHERE CLUB_STATUS = 'STA06'
+	</select>
+	<select id="selectTotalRecord">
+		SELECT 
+			COUNT(*)
+		FROM 
+			CLUB
+		WHERE 
+			CLUB_STATUS = 'STA06'
+	</select>
+	<insert id="insert" parameterType="ClubVO">
+		<selectKey order="BEFORE" keyProperty="clubAppno" resultType="String">
+			SELECT 
+			    'CA'||TO_CHAR(SYSDATE,'YYMMDD')||LPAD(NVL(TO_NUMBER(SUBSTR(MAX(CLUB_APPNO),9)),0)+1,2,'0') 
+			FROM 
+			    CLUB
+			WHERE CLUB_APPNO LIKE 'CA'||TO_CHAR(SYSDATE,'YYMMDD')||'%'
+		</selectKey>
+		INSERT INTO CLUB (
+		    CLUB_PRO,CLUB_CATEGORY,
+		    CLUB_NAME,CLUB_GF,CLUB_APPNO, CLUB_MEM
+		    CLUB_LEADER,CLUB_STATUS,CLUB_CONTENT
+		) VALUES (
+		 #{clubPro},#{clubCategory},
+		  ,#{clubName},#{clubGf},#{clubAppNo}
+		  #{clubLeader},'STA01',#{clubContent}
+		)
+	</insert>
+	<update id="update" parameterType="ClubVO">
+	  UPDATE 
+	      CLUB
+	  SET 
+	    <if test="clubNo != null">
+	      CLUB_NO=#{clubNo},
+	    </if>
+	    <if test="clubReject != null">
+	      CLUB_REJECT=#{clubReject},
+	    </if>
+	    CLUB_STATUS=#{clubStatus}
+	  WHERE 
+	    CLUB_APPNO=#{clubAppno}
+	</update>
+	<update id="updateClubViews" parameterType="ClubVO">
+      UPDATE 
+          CLUB
+      SET
+          CLUB_VIEWS = #{clubViews}
+      WHERE
+          CLUB_NO = #{clubNo}
+   </update>
+	<select id="select" parameterType="String" resultType="ClubVO">
+		SELECT 
+		    CLUB_NO, CLUB_NAME,CLUB_CATEGORY,CLUB_GF,
+		    DECODE(CLUB_CATEGORY, 
+		        'AC', '학술',
+		        'VO', '봉사',
+		        'HO', '취미',
+		        'EX', '전시',
+		        'SH', '공연',
+		        'RE', '종교',
+		        'PE', '체육',
+		        'FL', '어학',
+		        CLUB_CATEGORY) AS CLUB_CAT,
+		      CLUB.CLUB_DATE,CLUB_LEADER ,
+		    MEMBER_LEADER.MEM_NAME AS LEADER_NAME,
+		    CLUB_PRO,CLUB_VIEWS,
+		    MEMBER_PRO.MEM_NAME AS PRO_NAME,
+		    CLUB.CLUB_CONTENT
+		FROM 
+		    CLUB 
+		JOIN 
+		    MEMBER MEMBER_LEADER ON (MEMBER_LEADER.MEM_NO = CLUB.CLUB_LEADER)
+		JOIN 
+		    MEMBER MEMBER_PRO ON (MEMBER_PRO.MEM_NO = CLUB.CLUB_PRO)
+		WHERE 
+	    	CLUB.CLUB_NO = #{clubNo}
+	</select>
+</mapper>

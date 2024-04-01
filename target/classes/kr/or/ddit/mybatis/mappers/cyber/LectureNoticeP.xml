@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="kr.or.ddit.professor.cyber.lecturenotice.dao.LectureNoticeDAOP">
+
+<sql id="searchFrag">
+      <trim prefix="AND" prefixOverrides="AND">
+         <if test="not paging.detailCondition.empty">
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(paging.simpleCondition.searchWord)">
+               <choose>
+                  <when test="paging.simpleCondition.searchType eq 'lecannTitle'">
+                     INSTR(LECANN_TITLE, #{simpleCondition.searchWord}) > 0
+                  </when>
+                  <when test="paging.simpleCondition.searchType eq 'lecannContent'">
+                     INSTR(LECANN_CONTENT, #{simpleCondition.searchWord}) > 0
+                  </when>
+                  <otherwise>
+                     (INSTR(LECANN_TITLE, #{simpleCondition.searchWord}) > 0
+                     OR                     
+                     INSTR(LECANN_CONTENT, #{simpleCondition.searchWord}) > 0)
+                  </otherwise>
+               </choose>
+            </if>
+         </if>
+      </trim>
+   </sql>
+
+
+
+
+	<select id="selectTotalRecord">
+		SELECT
+		COUNT(*)
+		FROM
+		LECTURE_ANNOUNCEMENT
+		WHERE
+		LECANN_NO
+		LIKE 'LA%'
+	</select>
+
+	<select id="selectListAnnoun" resultType="LectureAnnouncementVO">
+		SELECT
+		LECANN_NO,LEC_CODE,LECANN_TITLE,LECANN_CONTENT,GF_NO,LECANN_DATE,MEM_NAME
+		FROM
+		LECTURE_ANNOUNCEMENT
+
+
+		WHERE LEC_CODE = #{lecCode}
+<!-- 				<include refid="searchFrag"/> -->
+<!-- 		<![CDATA[ -->
+<!-- 		AND RNUM >= #{paging.startRow} AND RNUM <= #{paging.endRow} -->
+<!-- 		]]> -->
+
+
+	</select>
+
+	<resultMap type="LectureAnnouncementVO" id="noticeMap" autoMapping="true">
+		<id property="lecannNo" column="LECANN_NO" />
+		<collection property="fileList" javaType="list"
+			ofType="FileVO" autoMapping="true">
+			<id property="fileNo" column="file_no" />
+		</collection>
+	</resultMap>
+
+	<select id="select" resultMap="noticeMap" parameterType="String">
+		SELECT
+		la.lecann_no,
+		la.lec_code,
+		la.lecann_title,
+		la.lecann_content,
+		la.gf_no,
+		la.lecann_date,
+		la.mem_name,
+		F.file_no,
+		F.file_nm,
+		F.file_save,
+		F.mime,
+		F.file_size,
+		F.fancy_size,
+		F.gf_no
+		FROM
+		lecture_announcement la
+		INNER JOIN "FILE" F ON la.gf_no = F.gf_no
+
+		where
+		la.gf_no = F.gf_no
+		AND LECANN_NO
+		= #{lecannNo}
+
+	</select>
+
+	<select id="selectTodayRecord">
+		SELECT
+		COUNT(LECANN_NO)
+		FROM
+		LECTURE_ANNOUNCEMENT
+		WHERE
+		LECANN_NO LIKE 'LA%'
+		AND
+		LECANN_DATE = SYSDATE
+	</select>
+
+	<insert id="insertNotice" parameterType="LectureAnnouncementVO">
+		<selectKey order="BEFORE" keyProperty="lecannNo"
+			resultType="string">
+			SELECT 'LA' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX_CODE, 3)), 0)
+			+ 1, 5, '0')
+			FROM (
+			SELECT MAX(LECANN_NO) AS MAX_CODE
+			FROM
+			LECTURE_ANNOUNCEMENT
+			)
+		</selectKey>
+		INSERT INTO lecture_announcement (
+		lecann_no,
+		lec_code,
+		lecann_title,
+		lecann_content,
+		gf_no,
+		lecann_date,
+		mem_name
+		) VALUES (
+		#{lecannNo},
+		#{lecCode},
+		#{lecannTitle},
+		#{lecannContent},
+		#{gfNo},
+		SYSDATE,
+		#{memName}
+		)
+	</insert>
+
+
+	<update id="update">
+		UPDATE lecture_announcement
+		SET
+		LECANN_TITLE =
+		#{lecannTitle,
+		jdbcType=VARCHAR},
+		lecann_CONTENT = #{lecannContent,
+		jdbcType=VARCHAR}
+		WHERE
+		lecann_no = #{lecannNo, jdbcType=VARCHAR}
+
+	</update>
+
+	<delete id="delete">
+		DELETE FROM lecture_announcement
+		WHERE LECANN_NO =
+		#{lecannNo}
+	</delete>
+
+</mapper>

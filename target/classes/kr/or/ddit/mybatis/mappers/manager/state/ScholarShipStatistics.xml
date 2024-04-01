@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.manager.stats.scholarship.dao.ScholarShipStatisticsDAOM">
+<select id="selectDeptList" resultType="ScholashipRecVO">
+SELECT
+    D.DEPT_NAME, COUNT(*) as count
+FROM
+    SCHOLASHIP_REC SR
+    INNER JOIN SCHOLASHIP S ON S.SCHOL_CODE = SR.SCHOL_CODE
+    INNER JOIN STUDENT ST ON ST.SMEM_NO = SR.SMEM_NO
+    INNER JOIN DEPARTMENT D ON D.DEPT_CODE = ST.DEPT_CODE
+GROUP BY
+    D.DEPT_NAME
+</select>
+<select id="selectScList" resultType="ScholashipRecVO">
+SELECT
+    S.SCHOL_NAME,
+    COUNT(*) as count
+FROM
+    SCHOLASHIP_REC SR
+    INNER JOIN SCHOLASHIP S ON S.SCHOL_CODE = SR.SCHOL_CODE
+GROUP BY
+    S.SCHOL_NAME
+</select>
+</mapper>

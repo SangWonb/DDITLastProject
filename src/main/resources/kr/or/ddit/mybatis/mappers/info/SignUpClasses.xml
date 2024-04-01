@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="kr.or.ddit.student.info.signupclasses.dao.SignUpClassesDAOS">
+
+	<select id="selectSignUpDay" parameterType="kr.or.ddit.student.info.signupclasses.vo.SignUpVO" resultType="CalendarVO">
+		SELECT
+		    cldr_start,
+		    cldr_end
+		FROM
+		    calendar
+		WHERE
+		    CLDR_TYPE = 'SC'
+		<![CDATA[
+		    AND cldr_start >= #{semesterStart,jdbcType=DATE}
+		    AND cldr_start <= #{semesterEnd,jdbcType=DATE}
+		]]>
+	</select>
+	
+	<select id="selectStudentInfo" parameterType="String" resultType="StudentVO">
+		SELECT
+		    smem_no,
+		    C.value as smem_semester,
+		    dept_name,
+		    M.mem_name
+		FROM
+		    student S 
+		        INNER JOIN member M on (S.smem_no = M.mem_no)
+		        INNER JOIN department D on (S.dept_code = D.dept_code)
+		        LEFT OUTER JOIN common C on (S.smem_semester = C.name)
+		WHERE smem_no = #{smemNo}
+	</select>
+	
+	<resultMap type="LectureVO" id="signUpListMap" autoMapping="true">
+		<id property="lecCode" column="lec_code"/> 
+		<collection property="lecTimeList" javaType="list" ofType="LectureTimeVO">
+			<id property="lolCode" column="lol_code"/>
+			<id property="ltDay" column="lt_day"/>
+			<id property="ltTime" column="lt_time"/>
+		</collection>
+	</resultMap>
+	
+	<select id="selectLecListForSignUpClasses" parameterType="kr.or.ddit.student.info.signupclasses.vo.SignUpVO" resultMap="signUpListMap">
+		WITH signlist AS (
+		    SELECT
+		        L.lec_code,
+		        LOL.lol_code,
+		        LOL.sub_code,
+		        S.sub_name,
+		        LOL.lol_name,
+		        S.sub_schyear,
+		        S.major_cultural,
+		        S.choice_require,
+		        S.sub_credit,
+		        S.sub_semester,
+		        D.dept_name,
+		        LOL.pmem_no,
+		        EXTRACT(YEAR FROM lol.lec_appno) as year,
+		        LOL.lol_limit,
+		        M.mem_name,
+		        LT.lt_day,
+		        LT.lt_time
+		    FROM
+		        lecture L
+		        INNER JOIN lec_open_list LOL ON L.lol_code = LOL.lol_code
+		        INNER JOIN subject S ON LOL.sub_code = S.sub_code
+		        INNER JOIN department D ON D.dept_code = S.dept_code
+		        INNER JOIN member M ON LOL.pmem_no = M.mem_no
+		        INNER JOIN lecture_time LT ON LOL.lol_code = LT.lol_code
+		    WHERE S.sub_semester = #{semester} AND EXTRACT(YEAR FROM lol.lec_appno) = #{year, jdbcType=INTEGER}
+		    <if test='selectPart eq "D"'>
+		    	AND D.dept_code = #{deptCode}
+		    	AND S.sub_schyear in (#{schoolYear},'공통')
+		    </if>
+		    <if test='selectPart eq "R"'>
+		    	AND S.major_cultural = '교양' AND S.sub_schyear = '공통'
+		    </if>
+		    <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(lolName)">
+		    	AND INSTR(S.lol_name, #{lolName}) > 0
+		    </if>
+		    <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(subCode)">
+		    	AND INSTR(S.sub_code, #{subCode}) > 0
+		    </if>
+		    ORDER BY L.lec_code
+		)
+		SELECT ROWNUM RNUM, signlist.*
+		FROM signlist
+	</select>
+	
+	<select id="lecSignUpCount" parameterType="String" resultType="int">
+		SELECT
+		    count(*)
+		FROM
+		    registration
+		WHERE lec_code = #{lecCode}
+	</select>
+	
+	<select id="selectLecListChoose" parameterType="kr.or.ddit.student.info.signupclasses.vo.SignUpVO" resultMap="signUpListMap">
+		SELECT
+		    L.lec_code,
+		    S.sub_name,
+		    LOL.lol_name,
+		    S.major_cultural,
+		    S.choice_require,
+		    S.sub_credit,
+		    LT.lt_day,
+		    LT.lt_time
+		FROM
+		    lecture L
+		    INNER JOIN lec_open_list LOL ON L.lol_code = LOL.lol_code
+		    INNER JOIN subject S ON LOL.sub_code = S.sub_code
+		    INNER JOIN lecture_time LT ON LOL.lol_code = LT.lol_code
+		    INNER JOIN registration R ON L.lec_code = R.lec_code
+		WHERE S.sub_semester = #{semester} AND EXTRACT(YEAR FROM lol.lec_appno) = #{year, jdbcType=INTEGER}
+		    AND R.smem_no = #{smemNo}
+		ORDER BY L.lec_code
+	</select>
+	
+	<select id="selectChooseCredit" parameterType="kr.or.ddit.student.info.signupclasses.vo.SignUpVO" resultType="int">
+		SELECT
+		    NVL(SUM(S.sub_credit),0)
+		FROM
+		    lecture L
+		    INNER JOIN lec_open_list LOL ON L.lol_code = LOL.lol_code
+		    INNER JOIN subject S ON LOL.sub_code = S.sub_code
+		    INNER JOIN registration R ON L.lec_code = R.lec_code
+		WHERE S.sub_semester = #{semester} AND EXTRACT(YEAR FROM lol.lec_appno) = #{year, jdbcType=INTEGER}
+		        AND R.smem_no = #{smemNo}
+		ORDER BY L.lec_code
+	</select>
+	
+	<insert id="insertRegistration" parameterType="RegistrationVO">
+		<selectKey order="BEFORE" keyProperty="lhCode" resultType="string">
+			SELECT 'LH' || LPAD(TO_CHAR(NVL(MAX(to_number(substr(lh_code,3))), 0)+1), 7, '0')   
+			FROM registration
+		</selectKey>
+		INSERT INTO registration (
+		    lh_code,
+		    smem_no,
+		    lec_code
+		) VALUES (
+			#{lhCode},
+		    #{smemNo},
+		    #{lecCode}
+		)
+	</insert>
+	
+	<delete id="deleteRegistration" parameterType="string">
+		DELETE FROM registration
+		WHERE
+		    smem_no = #{smemNo}
+		    AND lec_code = #{lecCode}
+	</delete>
+	
+	<select id="existLecture" parameterType="kr.or.ddit.student.info.signupclasses.vo.SignUpVO" resultType="int">
+		SELECT
+		    count(*)
+		FROM
+		    lecture L
+		    INNER JOIN lec_open_list LOL ON L.lol_code = LOL.lol_code
+		    INNER JOIN subject S ON LOL.sub_code = S.sub_code
+		WHERE S.sub_semester = #{semester} AND EXTRACT(YEAR FROM lol.lec_appno) = #{year, jdbcType=INTEGER}
+		    AND L.lec_code = #{lecCode}
+	</select>
+	
+	<select id="retrieveLectureInfo" parameterType="kr.or.ddit.student.info.signupclasses.vo.SignUpVO" resultMap="signUpListMap">
+		SELECT
+		    L.lec_code,
+		    LOL.lol_code,
+		    LOL.sub_code,
+		    S.sub_name,
+		    LOL.lol_name,
+		    S.sub_schyear,
+		    S.major_cultural,
+		    S.choice_require,
+		    S.sub_credit,
+		    S.sub_semester,
+		    D.dept_name,
+		    LOL.pmem_no,
+		    EXTRACT(YEAR FROM lol.lec_appno) as year,
+		    LOL.lol_limit,
+		    M.mem_name,
+		    LT.lt_day,
+		    LT.lt_time
+		FROM
+		    lecture L
+		    INNER JOIN lec_open_list LOL ON L.lol_code = LOL.lol_code
+		    INNER JOIN subject S ON LOL.sub_code = S.sub_code
+		    INNER JOIN department D ON D.dept_code = S.dept_code
+		    INNER JOIN member M ON LOL.pmem_no = M.mem_no
+		    INNER JOIN lecture_time LT ON LOL.lol_code = LT.lol_code
+		WHERE S.sub_semester = #{semester} AND EXTRACT(YEAR FROM lol.lec_appno) = #{year, jdbcType=INTEGER}
+		    AND L.lec_code = #{lecCode}
+	</select>
+	
+	<select id="hasRegistration" parameterType="String" resultType="int">
+		SELECT
+		    count(*)
+		FROM
+		    registration
+		WHERE 
+		    smem_no = #{smemNo}
+		    AND lec_code = #{lecCode}
+	</select>
+	
+	<select id="signUpedLecCode" parameterType="map" resultType="String">
+		SELECT
+            L.lec_code
+        FROM
+            lecture L
+            INNER JOIN lec_open_list LOL ON L.lol_code = LOL.lol_code
+            INNER JOIN subject S ON LOL.sub_code = S.sub_code
+            INNER JOIN department D ON D.dept_code = S.dept_code
+            INNER JOIN member M ON LOL.pmem_no = M.mem_no
+            INNER JOIN lecture_time LT ON LOL.lol_code = LT.lol_code
+            LEFT OUTER JOIN registration R ON L.lec_code = R.lec_code
+        WHERE S.sub_semester = #{signUp.semester}
+            AND EXTRACT(YEAR FROM lol.lec_appno) = #{signUp.year}
+            AND R.smem_no = #{smemNo}
+        ORDER BY L.lec_code
+	</select>
+	
+</mapper>

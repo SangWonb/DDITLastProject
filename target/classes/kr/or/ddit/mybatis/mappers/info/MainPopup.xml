@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.manager.com.popup.mainpopup.dao.MainPopupDAOM">
+
+<resultMap type="PopupVO" id="popup" autoMapping="true">
+	<id property="popupCode" column="popup_code"/>
+	<collection property="fileList" javaType="list" ofType="FileVO" autoMapping="true">
+		<id property="fileNo" column="file_no"/>
+	</collection>
+</resultMap>
+
+<select id="selectPopupList" resultMap="popup">
+	SELECT B.*
+		FROM(
+			SELECT ROWNUM RNUM, A.*
+			FROM(
+				SELECT 
+				    P.POPUP_CODE, P.POPUP_TITLE, P.POPUP_PERIOD
+				    ,F.file_no,F.file_nm,F.file_save,F.mime,F.file_size,F.fancy_size,F.gf_no
+				FROM POPUP P
+				LEFT OUTER JOIN "FILE" F on P.gf_no = F.gf_no
+			) A
+		) B
+</select>
+
+<select id="select" parameterType="String" resultMap="popup">
+	SELECT 
+	    P.POPUP_CODE, P.POPUP_TITLE, P.POPUP_PERIOD,P.GF_NO
+	    ,F.file_no,F.file_nm,F.file_save,F.mime,F.file_size,F.fancy_size,F.gf_no
+	FROM POPUP P
+	LEFT OUTER JOIN "FILE" F on P.gf_no = F.gf_no
+	WHERE POPUP_CODE = #{popupCode}
+</select>
+
+<update id="update" parameterType="PopupVO">
+	UPDATE POPUP
+SET 
+    POPUP_TITLE = #{popupTitle,jdbcType=VARCHAR},
+    POPUP_PERIOD = #{popupPeriod,jdbcType=VARCHAR},
+    GF_NO = '00_POPUP'
+WHERE
+    POPUP_CODE = #{popupCode}
+</update>
+
+<insert id="insert" parameterType="PopupVO">
+	<selectKey order="BEFORE" keyProperty="popupCode" resultType="String">
+		SELECT 'POP' || LPAD(TO_CHAR(NVL(MAX(to_number(substr(POPUP_CODE,4))), 0)+1), 4, '0')   
+		FROM POPUP
+	</selectKey>
+	INSERT INTO POPUP(   
+	    POPUP_CODE, POPUP_TITLE, POPUP_PERIOD, GF_NO
+    	)
+		VALUES
+		(
+        #{popupCode,jdbcType=VARCHAR},
+		#{popupTitle,jdbcType=VARCHAR},
+		#{popupPeriod,jdbcType=VARCHAR},
+		'00_POPUP'
+		)
+</insert>
+<delete id="delete" parameterType="String">
+	delete POPUP
+	where POPUP_CODE = #{popupCode}
+</delete>
+</mapper>

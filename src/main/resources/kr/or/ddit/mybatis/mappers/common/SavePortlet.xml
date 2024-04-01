@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.portlet.dao.PortletDAOC">
+
+<insert id="insertPortlet" parameterType="PortletVO">
+      <selectKey order="BEFORE" keyProperty="portCode"
+         resultType="string">
+         SELECT 'PO' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX_CODE, 3)), 0) + 1, 6, '0')
+         FROM (
+         SELECT MAX(PORT_CODE) AS MAX_CODE
+         FROM PORTLET
+         )
+         WHERE 'PO' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX_CODE, 3)), 0) + 1, 6, '0') NOT
+         IN (SELECT PORT_CODE FROM PORTLET)
+      </selectKey>
+INSERT INTO portlet (
+    port_code,
+    mem_no,
+    x,
+    y,
+    w,
+    h,
+    locked,
+    nomove,
+    noresize,
+    minh,
+    minw,
+    content,
+    port_state
+)VALUES(
+
+    #{portCode},
+    #{memNo},
+    #{x},
+    #{y},
+    #{w},
+    #{h},
+    #{locked},
+    #{nomove},
+    #{noresize},
+    #{minh},
+    #{minw},
+    #{content},
+    #{portState}
+)
+
+
+
+
+
+</insert>
+
+
+
+
+
+</mapper>

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN" "http://tiles.apache.org/dtds/tiles-config_3_0.dtd" >
+<tiles-definitions>	
+
+<!-- 상속의 개념(자식) -->
+<!-- 와일드 카드의 인덱스 -->	
+
+<!-- 로그인 -->  
+  <definition name="tiles:login/*" extends="parent_login">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/login/{1}.jsp"/>
+  </definition>
+
+<!-- 메인홈페이지 -->
+  <definition name="tiles:common/*" extends="parent_main">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/common/{1}.jsp"/>
+  </definition>
+  
+<!-- 커뮤니티 -->  
+  <definition name="tiles:common/board/*" extends="parent_community">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/common/board/{1}.jsp"/>
+  </definition>
+  <definition name="tiles:common/board/*/*" extends="parent_community">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/common/board/{1}/{2}.jsp"/>
+  </definition>
+  
+  <definition name="tiles:common/info/*/*/*" extends="parent_common">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/common/info/{1}/{2}/{3}.jsp"/>
+  </definition>
+  
+<!--   <definition name="index" extends="parent_common"> -->
+<!--     <put-attribute name="contentPage" value="/WEB-INF/views/index.jsp"/> -->
+<!--   </definition> -->
+
+<!--   <definition name="common/*/*" extends="parent_common"> -->
+<!--   	<put-attribute name="contentPage" value="/WEB-INF/views/{1}/{2}/{3}.jsp"/> -->
+<!--   </definition> -->
+  
+<!--   <definition name="common/*/*/*" extends="parent_common"> -->
+<!--   	<put-attribute name="contentPage" value="/WEB-INF/views/common/{1}/{2}/{3}.jsp"/> -->
+<!--   </definition> -->
+<!--   <definition name="common/*/*/*/*" extends="parent_common"> -->
+<!--   	<put-attribute name="contentPage" value="/WEB-INF/views/common/{1}/{2}/{3}/{4}.jsp"/> -->
+<!--   </definition> -->
+  
+<!-- 증명서 -->  
+  <definition name="tiles:student/form/CertificateFormS" extends="parent_certificate">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/student/form/{1}.jsp"/>
+  </definition>
+  
+<!-- 통합정보시스템 -->  
+  <definition name="tiles:student/info/*" extends="parent_student">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/student/info/{1}.jsp"/>
+  </definition>
+  <definition name="tiles:student/info/*/*" extends="parent_student">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/student/info/{1}/{2}.jsp"/>
+  </definition>
+  <definition name="tiles:student/info/*/*/*" extends="parent_student">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/student/info/{1}/{2}/{3}.jsp"/>
+  </definition>
+  
+  <definition name="tiles:professor/info/*" extends="parent_professor">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/professor/info/{1}.jsp"/>
+  </definition>
+  <definition name="tiles:professor/info/*/*" extends="parent_professor">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/professor/info/{1}/{2}.jsp"/>
+  </definition>
+  <definition name="tiles:professor/info/*/*/*" extends="parent_professor">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/professor/info/{1}/{2}/{3}.jsp"/>
+  </definition>
+  <definition name="tiles:professor/*/*/*/*" extends="parent_professor">
+<put-attribute name="contentPage" value="/WEB-INF/views/professor/{1}/{2}/{3}/{4}.jsp"/>
+</definition>
+
+  <definition name="tiles:manager/*" extends="parent_manager">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/manager/{1}.jsp"/>
+  </definition>
+  <definition name="tiles:manager/*/*" extends="parent_manager">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/manager/{1}/{2}.jsp"/>
+  </definition>
+  <definition name="tiles:manager/*/*/*" extends="parent_manager">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/manager/{1}/{2}/{3}.jsp"/>
+  </definition>
+  <definition name="tiles:manager/*/*/*/*" extends="parent_manager">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/manager/{1}/{2}/{3}/{4}.jsp"/>
+  </definition>
+  <definition name="tiles:manager/*/*/*/*/*" extends="parent_manager">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/manager/{1}/{2}/{3}/{4}/{5}.jsp"/>
+  </definition>
+  
+<!-- 사이버캠퍼스 메인 페이지 -->
+  <definition name="tiles:student/cyber/cyberMain" extends="parent_studentCM">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/student/cyber/cyberMain.jsp"/>
+  </definition>
+  <definition name="tiles:professor/cyber/cyberMain" extends="parent_professorCM">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/professor/cyber/cyberMain.jsp"/>
+  </definition>
+  
+<!-- 사이버캠퍼스 -->
+  <definition name="tiles:student/cyber/*" extends="parent_studentC">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/student/cyber/{1}.jsp"/>
+  </definition>
+  <definition name="tiles:student/cyber/*/*" extends="parent_studentC">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/student/cyber/{1}/{2}.jsp"/>
+  </definition>
+  <definition name="tiles:student/cyber/*/*/*" extends="parent_studentC">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/student/cyber/{1}/{2}/{3}.jsp"/>
+  </definition>
+  
+  <definition name="tiles:professor/cyber/*" extends="parent_professorC">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/professor/cyber/{1}.jsp"/>
+  </definition>
+  <definition name="tiles:professor/cyber/*/*" extends="parent_professorC">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/professor/cyber/{1}/{2}.jsp"/>
+  </definition>
+  <definition name="tiles:professor/cyber/*/*/*" extends="parent_professorC">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/professor/cyber/{1}/{2}/{3}.jsp"/>
+  </definition>
+  
+<!-- 경력개발시스템 -->
+  <definition name="tiles:student/careerup/*" extends="parent_studentUp">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/student/careerup/{1}.jsp"/>
+  </definition>
+  <definition name="tiles:student/careerup/*/*" extends="parent_studentUp">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/student/careerup/{1}/{2}.jsp"/>
+  </definition>
+  <definition name="tiles:student/careerup/*/*/*" extends="parent_studentUp">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/student/careerup/{1}/{2}/{3}.jsp"/>
+  </definition>
+
+<!-- 오늘의식단 -->
+  <definition name="tiles:common/menu/*/*" extends="parent_food">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/common/menu/{1}/{2}.jsp"/>
+  </definition>
+
+<!-- 웹메일 -->  
+  <definition name="tiles:common/mail/*" extends="parent_email">
+  	<put-attribute name="contentPage" value="/WEB-INF/views/common/mail/{1}.jsp"/>
+  </definition>
+
+</tiles-definitions>

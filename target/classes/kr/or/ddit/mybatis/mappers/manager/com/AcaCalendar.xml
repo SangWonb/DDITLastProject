@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="kr.or.ddit.manager.com.calendar.academiccalendar.dao.AcaCalendarDAO">
+	
+		<select id="selectAList" resultType="CalendarVO">
+		SELECT
+		    cldr_code,
+		    cldr_type,
+		    mem_no,
+		    cldr_memo,
+		    cldr_start,
+		    cldr_end,
+		    cldr_color,
+		    dept_code,
+		    time_start,
+		    time_end
+		FROM
+		    calendar 
+		where
+		    cldr_code like 'A%'
+	</select>
+	
+	<insert id="insertNewInfo" parameterType="CalendarVO">
+		<selectKey order="BEFORE" keyProperty="cldrCode" keyColumn="CLDR_CODE" resultType="String">
+			SELECT 
+			    'A' || EXTRACT(YEAR FROM CURRENT_DATE) || 
+			    LPAD(NVL(MAX(TO_NUMBER(SUBSTR(CLDR_CODE,6))), 0)+1, 5, '0') AS CLDR_CODE
+			FROM 
+			    CALENDAR
+			WHERE 
+			    CLDR_CODE LIKE 'A%'
+		</selectKey>
+		INSERT INTO calendar (
+		    cldr_code,
+		    mem_no,
+		    cldr_memo,
+		    cldr_start,
+		    cldr_end,
+		    cldr_color
+		) VALUES (
+			#{cldrCode},
+			#{memNo},
+			#{cldrMemo},
+			#{cldrStart},
+			#{cldrEnd},
+			#{cldrColor}
+		)
+	</insert>
+	
+	<delete id="deleteInfo" parameterType="String">
+		DELETE FROM 
+			calendar
+		WHERE
+		    cldr_code = #{cldrCode}
+	</delete>
+</mapper>

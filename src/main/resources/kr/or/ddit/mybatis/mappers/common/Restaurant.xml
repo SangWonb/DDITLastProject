@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.menu.restaurant.dao.RestaurantDAOC">
+	
+	<sql id="searchFrag">
+	   <trim prefix="WHERE res_status = 'STA06'">
+	 	<if test="not detailCondition.empty">		<!-- StringUtils에서 직접 QualifiedName..? copy한것 >> xml에서는 메서드를 이런식으로 가져와야함 -->
+	 		<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.resCode)">
+		 		AND res_code = #{detailCondition.resCode} 
+	 		</if>
+	 		<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.resName)">
+		 		AND INSTR(res_name, #{detailCondition.resName}) > 0
+	 		</if>
+	 	</if>
+	 </trim>
+	</sql>
+	<resultMap type="RestaurantVO" id="restMap" autoMapping="true">
+		<id property="resAppno" column="res_appno"/> <!-- 여기 아이디 없으면 바로 에러임 // 중복여부 판단 -->
+		<!-- collection : 1:N 관계를 표현하는 바인드 설정 (main entity를 1의 기준으로 관계를 파악함.) -->
+		<collection property="restaurantReviewList" javaType="list" ofType="RestaurantReviewVO">
+			<id property="reviewNo" column="review_no"/>
+			<result property="memNo" column="mem_no"/>
+			<result property="reviewPrefer" column="review_prefer"/>
+			<result property="reviewReply" column="review_reply"/>
+			<association property="member" javaType="MemberVO" autoMapping="true">
+				<id property="memNo" column="mem_no"/>				
+			</association>
+		</collection>
+	</resultMap>
+	
+	<select id="selectTotalRecord" resultType="int" parameterType="kr.or.ddit.utils.paging.PaginationInfo">
+		SELECT COUNT(*)
+		FROM restaurant
+		<include refid="searchFrag" />
+	</select>
+	<select id="selectRestaurantList" resultType="RestaurantVO" parameterType="kr.or.ddit.utils.paging.PaginationInfo">
+		WITH REST AS(
+		SELECT
+		    res_appno,res_code,res_name,
+    		res_location,res_tel,res_like,res_hate,
+    		mem_no,res_status
+		FROM
+		    restaurant
+		<include refid="searchFrag" />
+		ORDER BY res_name
+		), RREST AS(
+		SELECT ROWNUM rnum,REST.*
+		FROM REST
+		)
+		SELECT *
+		FROM RREST
+		<![CDATA[
+	      WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+	   ]]>
+	</select>
+	<select id="selectRestaurant" parameterType="string" resultMap="restMap">
+		SELECT
+		    R.res_appno,R.res_code,R.res_name,R.res_location,R.res_tel,
+		    R.res_like,R.res_hate,R.res_date,R.mem_no,R.res_status, 
+		    RV.review_no,RV.res_appno,RV.mem_no,RV.review_prefer,RV.review_reply,
+            M.mem_no,M.mem_name,M.mem_pass,M.mem_tel,M.mem_addr1,M.mem_addr2,M.mem_email,
+   		 	M.mem_reg1,M.mem_reg2,M.mem_bank,M.mem_depo,M.mem_banknum,M.gf_No
+		FROM
+		    restaurant R LEFT OUTER JOIN restaurant_review RV on(R.res_appno = RV.res_appno)
+			LEFT OUTER JOIN member M on(RV.mem_no = M.mem_no)
+		WHERE R.res_appno = #{resAppno}
+		ORDER BY RV.review_no desc
+	</select>
+	
+	<insert id="insertRestaurant" parameterType="RestaurantVO">
+		<selectKey order="BEFORE" keyProperty="resAppno" resultType="string">
+			SELECT 'RES' || LPAD(TO_CHAR(NVL(MAX(to_number(substr(res_appno,4))), 0)+1), 5, '0')   
+			FROM restaurant
+		</selectKey>
+			INSERT INTO restaurant (
+			    res_appno,
+			    res_code,
+			    res_name,
+			    res_location,
+			    res_tel,
+			    res_like,
+			    res_hate,
+			    res_date,
+			    mem_no
+			) VALUES (
+			    #{resAppno,jdbcType=VARCHAR}
+				, #{resCode,jdbcType=VARCHAR}
+				, #{resName,jdbcType=VARCHAR}
+				, #{resLocation,jdbcType=VARCHAR}
+				, #{resTel,jdbcType=VARCHAR}
+				, #{resLike,jdbcType=NUMERIC}
+				, #{resHate,jdbcType=NUMERIC}
+				, TO_DATE(SYSDATE)
+				, #{memNo,jdbcType=VARCHAR}
+			)
+	</insert>
+	
+	<update id="restaurantLike" parameterType="String">
+		UPDATE restaurant 
+		SET res_like = res_like + 1 
+		WHERE res_appno = #{resAppno,jdbcType=VARCHAR}
+	</update>
+	<update id="restaurantHate" parameterType="String">
+		UPDATE restaurant 
+		SET res_hate = res_hate + 1 
+		WHERE res_appno = #{resAppno,jdbcType=VARCHAR}
+	</update>
+	
+</mapper>

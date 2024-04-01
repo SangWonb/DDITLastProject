@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="kr.or.ddit.common.board.freeboard.dao.FreeBoardDAO">
+
+	<sql id="searchFrag">
+		<trim prefix="AND" prefixOverrides="AND">
+			<if test="not detailCondition.empty">
+				<if
+					test="@org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+					<choose>
+						<when test="simpleCondition.searchType eq 'cmntTitle'">
+							INSTR(CMNT_TITLE, #{simpleCondition.searchWord}) >
+							0
+						</when>
+						<when test="simpleCondition.searchType eq 'cmntContent'">
+							INSTR(CMNT_CONTENT, #{simpleCondition.searchWord})
+							> 0
+						</when>
+						<otherwise>
+							(INSTR(CMNT_TITLE, #{simpleCondition.searchWord}) > 0
+							OR
+							INSTR(CMNT_CONTENT, #{simpleCondition.searchWord}) > 0)
+						</otherwise>
+					</choose>
+				</if>
+			</if>
+		</trim>
+	</sql>
+
+
+	<select id="selectList" resultType="CommunityVO"
+		parameterType="kr.or.ddit.utils.paging.PaginationInfo">
+		SELECT B.*
+		FROM (
+		SELECT ROWNUM RNUM, A.*
+		FROM (
+		SELECT
+		C.CMNT_CODE,
+		C.CMNT_TITLE,
+		C.CMNT_CONTENT,
+		C.MEM_NO,
+		D.MEM_NAME,
+		C.CMNT_COUNT,
+		C.CMNT_DATE,
+		C.PASSWORD,
+		LEVEL
+		FROM
+		COMMUNITY C
+		LEFT JOIN MEMBER D ON C.MEM_NO =
+		D.MEM_NO
+		WHERE CMNT_CODE LIKE 'FB%'
+		<include refid="searchFrag" />
+		START WITH
+		BO_PARENT IS NULL
+		CONNECT BY PRIOR
+		CMNT_CODE = BO_PARENT
+		ORDER
+		SIBLINGS BY
+		CMNT_CODE DESC
+		) A
+		) B
+
+		<![CDATA[
+		WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+	]]>
+
+
+
+
+	</select>
+	<select id="selectTotalRecord" resultType="int">
+		SELECT
+		COUNT(*)
+		FROM
+		COMMUNITY
+		WHERE
+		CMNT_CODE LIKE 'FB%'
+
+	</select>
+	<select id="selectListComment" parameterType="String"
+		resultType="CommunityVO">
+		SELECT
+		ROWNUM RNUM,
+		A.CMNT_CODE,
+		A.CMNT_CONTENT,
+		A.CMNT_DATE,
+		A.MEM_NO,
+		B.MEM_NAME
+		FROM
+		COMMUNITY A
+		JOIN
+		MEMBER B ON(A.MEM_NO=B.MEM_NO)
+		WHERE
+		A.CMNT_CODE LIKE 'CM%'
+		AND
+		A.BO_PARENT=#{cmntCode}
+	</select>
+	<select id="selectTodayRecord">
+		SELECT
+		COUNT(CMNT_CODE)
+		FROM
+		COMMUNITY
+		WHERE
+		CMNT_CODE
+		LIKE 'FB%'
+		AND
+		CMNT_DATE = SYSDATE
+	</select>
+		<resultMap type="CommunityVO" id="noticeMap" autoMapping="true">
+		<id property="cmntCode" column="CMNT_CODE" />
+		<collection property="fileList" javaType="list"
+			ofType="FileVO" autoMapping="true">
+			<id property="fileNo" column="file_no" />
+		</collection>
+	</resultMap>
+	
+<select id="select" parameterType="String" resultMap="noticeMap">
+    SELECT
+        c.cmnt_code,
+        c.cmnt_title,
+        c.cmnt_content,
+        c.cmnt_date,
+        c.cmnt_count,
+        c.gf_no,
+        c.bo_parent,
+        c.mem_no,
+        c.dept_code,
+        F.file_no,
+        F.file_nm,
+        F.file_save,
+        F.mime,
+        F.file_size,
+        F.fancy_size,
+        F.gf_no,
+        m.mem_name
+    FROM
+        community c
+    LEFT JOIN "FILE" F ON c.gf_no = F.gf_no
+    LEFT JOIN member m ON c.mem_no = m.mem_no
+    
+    WHERE
+    	cmnt_code = #{cmntCode}
+</select>
+
+	<insert id="insertFB" parameterType="CommunityVO">
+		<selectKey order="BEFORE" keyProperty="cmntCode"
+			resultType="String">
+			SELECT
+			'FB'||LPAD(NVL(TO_NUMBER(SUBSTR(MAX(CMNT_CODE),3)),0)+1, 6, '0')
+			FROM
+			COMMUNITY
+			WHERE
+			CMNT_CODE LIKE 'FB%'
+		</selectKey>
+		INSERT INTO
+		COMMUNITY(
+		CMNT_CODE,CMNT_TITLE,CMNT_CONTENT
+		,CMNT_DATE,MEM_NO,GF_NO,PASSWORD,BO_PARENT
+		)
+		VALUES(
+		#{cmntCode},#{cmntTitle},#{cmntContent}
+		,SYSDATE,#{memNo},#{gfNo},#{password},
+				<choose>
+			<when test="boParent == null or boParent == ''">
+				NULL
+			</when>
+			<otherwise>
+				#{boParent,jdbcType=VARCHAR}
+			</otherwise>
+		</choose>
+		
+		)
+	</insert>
+
+	<update id="updateCommunity" parameterType="CommunityVO">
+		UPDATE
+		COMMUNITY
+		SET
+		CMNT_TITLE = #{cmntTitle},
+		CMNT_CONTENT = #{cmntContent},
+		GF_NO = #{gfNo}
+		
+		WHERE
+		CMNT_CODE= #{cmntCode}
+	</update>
+
+
+	<delete id="deleteCommunity" parameterType="String">
+		DELETE FROM
+		COMMUNITY
+		WHERE
+		CMNT_CODE = #{cmntCode}
+	</delete>
+
+
+	<insert id="insertComment" parameterType="CommunityVO">
+		<selectKey order="BEFORE" keyProperty="cmntCode"
+			resultType="String">
+			SELECT
+			'CM'||LPAD(NVL(TO_NUMBER(SUBSTR(MAX(CMNT_CODE),3)),
+			0) + 1, 6, '0')
+			FROM
+			COMMUNITY
+			WHERE
+			CMNT_CODE LIKE 'CM%'
+		</selectKey>
+		INSERT INTO
+		COMMUNITY(CMNT_CODE,CMNT_CONTENT,CMNT_DATE,MEM_NO,BO_PARENT,PASSWORD)
+		VALUES
+		(#{cmntCode},#{cmntContent},SYSDATE,#{memNo},#{boParent},#{password})
+	</insert>
+	<update id="updateCount" parameterType="String">
+		UPDATE community
+		SET
+		CMNT_COUNT = CMNT_COUNT+1
+		WHERE CMNT_CODE = #{cmntCode}
+	</update>
+
+
+</mapper>

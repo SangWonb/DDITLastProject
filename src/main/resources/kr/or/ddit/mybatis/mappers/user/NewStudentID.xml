@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.member.login.dao.NewStudentIDDAO">
+
+	<select id="select" parameterType="StudentVO" resultType="StudentVO">
+		SELECT
+		    S.smem_no,S.dept_code,S.smem_semester,S.stu_mnl,S.stu_mcl,S.stu_cnl,
+		    S.stu_ccl,S.stu_joinyear,S.stu_record,S.stu_gestatus,S.stu_gtstatus,
+		    S.stu_enrollno,S.stu_yn,
+		    M.mem_no,M.mem_name,M.mem_pass,M.mem_tel,M.mem_addr1,
+		    M.mem_addr2,M.mem_email,M.mem_reg1,M.mem_reg2,
+		    M.mem_bank,M.mem_depo,M.mem_banknum,M.gf_no
+		FROM
+		    student S LEFT OUTER JOIN member M on (S.smem_no = M.mem_no)
+		WHERE 
+		    M.mem_reg1 = #{memReg1}
+		    and S.stu_enrollno = #{stuEnrollno}
+	</select>
+
+
+</mapper>

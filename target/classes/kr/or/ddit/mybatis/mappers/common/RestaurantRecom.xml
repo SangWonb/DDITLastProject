@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.menu.restaurant.dao.RestaurantRecomDAOC">
+
+	<select id="selectRestaurantRecom" parameterType="RestaurantRecomVO" resultType="RestaurantRecomVO">
+		SELECT
+		    res_group,res_sex,res_age,
+		    one,two,three,four,five
+		FROM
+		    restaurant_recom
+		WHERE
+		    res_group = #{resGroup,jdbcType=VARCHAR}
+		    and res_sex = #{resSex,jdbcType=VARCHAR}
+		    and res_age = #{resAge,jdbcType=CHAR}
+	</select>
+	
+</mapper>

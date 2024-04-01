@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.info.certificate.dao.CertificateDAO">
+
+	<select id="selectCrtfList" resultType="kr.or.ddit.vo.info.CertificateVO">
+		SELECT ROWNUM RNUM,CRTF_NAME, CRTF_AMT, CRTF_CODE
+		FROM CERTIFICATE
+	</select>
+	
+	<insert id="insertCrtfRec" parameterType="CertificateRecVO">
+		<selectKey order="BEFORE" keyProperty="crtfRecno" resultType="string">
+			SELECT 
+			    'CR'||TO_CHAR(SYSDATE, 'YYMMDD')
+			    || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(CRTF_RECNO), 9)), 0) + 1, 4, '0') 
+			FROM 
+			    CERTIFICATE_REC
+			WHERE 
+			    CRTF_RECNO LIKE 'CR'|| TO_CHAR(SYSDATE, 'YYMMDD') || '%'
+		</selectKey>
+		INSERT INTO 
+		    CERTIFICATE_REC(
+		        CRTF_RECNO, MEM_NO, CRTF_CODE, CRTF_QTYPT, CRTF_QTYRG ,CRTF_QTY, CRTF_AMT, CRTF_APPDATE, IMP_UID, MERCHANT_UID
+		    ) 
+		VALUES(
+		    #{crtfRecno}, #{memNo}, #{crtfCode}, #{crtfQtypt}, #{crtfQtyrg}, #{crtfQty}, #{crtfAmt}, SYSDATE, #{impUid}, #{merchantUid}
+		)
+	</insert>
+	
+	<select id="selectRecord" parameterType="string" resultType="StudentVO">
+		SELECT 
+			A.SMEM_NO
+			, TO_CHAR(A.STU_CHANGE,'""YYYY"년 "MM"월 "DD"일"') AS stdate
+        	, C.DEPT_NAME
+        	, B.MEM_NAME
+        	, B.MEM_REG1 || '-' || B.MEM_REG2 AS BAS
+        	, E.ENRL_MF
+        	, E.ENRL_TF
+        	, E.ENRL_IF
+        	, E.ENRL_MC
+        	, E.ENRL_TOTAL
+        	, TO_CHAR(F.ENRL_DATE,'""YYYY"년 "MM"월 "DD"일"') AS endate
+        	, TO_CHAR(SYSDATE,'""YYYY"년 "MM"월 "DD"일"') AS TODAY
+		FROM 
+			STUDENT A
+		JOIN 
+			MEMBER B ON (A.SMEM_NO = B.MEM_NO)
+		JOIN 
+			DEPARTMENT C ON (A.DEPT_CODE = C.DEPT_CODE)
+		JOIN 
+			ENROLL_INVOICE D ON (A.SMEM_NO = D.SMEM_NO)
+		JOIN 
+			ENROLLFEE E ON (D.ENRL_CODE = E.ENRL_CODE)
+		JOIN 
+			ENROLL_RECORD F ON (D.ENRL_NO = F.ENRL_NO)
+		WHERE 
+			A.SMEM_NO = #{smemNo}
+		AND 
+			A.STU_RECORD = 'AC006'
+	</select>
+	
+	<select id="selectCertifiRecList" parameterType="CertificateRecVO">
+		SELECT
+			A.CRTF_RECNO, 
+		    A.CRTF_CODE,
+		    B.CRTF_NAME,
+		    A.CRTF_QTYRG,
+		    A.CRTF_QTYPT,
+		    A.CRTF_QTY,
+		    A.CRTF_AMT,
+		    A.CRTF_APPDATE,
+		    A.CRTF_DATE,
+		    A.IMP_UID,
+		    A.MERCHANT_UID	    
+		FROM 
+		    CERTIFICATE_REC A
+		JOIN 
+		    CERTIFICATE B ON A.CRTF_CODE = B.CRTF_CODE
+		JOIN 
+		    STUDENT C ON A.MEM_NO = C.SMEM_NO
+		WHERE 
+		    C.SMEM_NO = #{smemNo}
+	</select>
+	
+	<select id="selectRecordP" parameterType="string" resultType="ProfessorVO">
+		SELECT 
+		    A.PMEM_NO
+		    , B.MEM_NAME
+		    , A.DEPT_CODE
+		    , A.START_DATE
+		    , A.PMEM_STATUS
+		    , A.PMEM_POSITION
+		    , A.PMEM_RESP
+		    , A.PMEM_TA
+		    , TO_CHAR(SYSDATE,'""YYYY"년 "MM"월 "DD"일"') AS TODAY
+		FROM 
+		    PROFESSOR A
+		JOIN 
+		    MEMBER B ON (A.PMEM_NO = B.MEM_NO)
+		WHERE PMEM_NO = #{pmemNo}
+	</select>
+
+	<insert id="insertCrtfGno" parameterType="string">
+		INSERT INTO 
+			CERTIFICATE_GNO (CRTF_GNO, CRTF_RECNO, CRTF_DATE)
+		SELECT
+			SUBSTR(CRTF_GNO, 1, 4) || '-' || SUBSTR(CRTF_GNO, 5, 4) || '-' || SUBSTR(CRTF_GNO, 9, 4) || '-' || SUBSTR(CRTF_GNO, 13, 4) AS CRTF_GNO
+			, #{crtfRecno} AS CRTF_RECNO
+			, SYSDATE AS CRTF_DATE
+		FROM (
+		SELECT
+			SUBSTR(DBMS_RANDOM.STRING('X', 16) || DBMS_RANDOM.STRING('N', 8), 1, 16) AS CRTF_GNO
+		FROM
+			DUAL
+		)
+	</insert>
+	
+	<update id="updateCrtfRec" parameterType="String">
+		UPDATE 
+	    	CERTIFICATE_REC
+	    SET 
+	        CRTF_QTYPT = CRTF_QTYPT + 1
+	        , CRTF_QTYRG = CRTF_QTYRG - 1
+	        , CRTF_DATE = SYSDATE
+	    WHERE 
+	        CRTF_RECNO = #{crtfRecno}
+	</update>
+	
+	<select id="selectGno" parameterType="CertificateGnoVO">
+		SELECT B.*
+		FROM (
+		    SELECT ROWNUM RNUM, A.*
+		    FROM (
+		        SELECT 
+		        	C.*, D.CRTF_QTYPT
+		        FROM 
+		        	CERTIFICATE_GNO C
+		        JOIN CERTIFICATE_REC D ON C.CRTF_RECNO = D.CRTF_RECNO
+		        WHERE 
+		        	C.CRTF_RECNO = #{crtfRecno}
+		        ORDER BY C.crtf_date DESC
+		    ) A
+		) B
+		<![CDATA[
+		WHERE B.RNUM <= #{crtfQtypt}
+		]]>
+	</select>
+
+</mapper>

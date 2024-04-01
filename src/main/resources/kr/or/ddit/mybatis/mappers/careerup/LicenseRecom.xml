@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.careerup.licenserecom.dao.LicenseRecomDAOS">
+<select id="selectLicenseRecom" resultType="LicenseRecomVO" parameterType="String">
+
+SELECT 
+    LR.LICEN_DEPT, 
+    LR.LICEN_JOB, 
+    L1.LICEN_NM AS ONE, 
+    L1.LICEN_AUTH AS ONE_AUTH,
+    L2.LICEN_NM AS TWO, 
+    L2.LICEN_AUTH AS TWO_AUTH,
+    L3.LICEN_NM AS THREE, 
+    L3.LICEN_AUTH AS THREE_AUTH
+FROM 
+    LICENSE_RECOM LR
+LEFT JOIN 
+    LICENSE L1 ON L1.LICEN_CODE = LR.ONE
+LEFT JOIN 
+    LICENSE L2 ON L2.LICEN_CODE = LR.TWO
+LEFT JOIN 
+    LICENSE L3 ON L3.LICEN_CODE = LR.THREE
+WHERE 
+    LR.LICEN_DEPT = #{licenDept}
+    AND 
+    LR.LICEN_JOB = #{licenJob}
+
+</select>
+</mapper>

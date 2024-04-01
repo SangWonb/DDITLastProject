@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="kr.or.ddit.student.careerup.subjectrecom.dao.SubjectRecomDAOS">
+	<select id="selectList">
+		SELECT COMPANY_JOB, COMPANY_TYPE
+		FROM SENIOR_COWORKER
+		GROUP BY COMPANY_JOB, COMPANY_TYPE
+	</select>
+	
+	<select id="recom" resultType="SubjectRecomVO">
+	    SELECT ONE,TWO,THREE FROM
+    SUBJECT_RECOM
+    WHERE COMPANY_JOB= #{companyJob}
+    AND COMPANY_TYPE = #{companyType}
+	</select>
+</mapper>
+

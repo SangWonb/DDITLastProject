@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.professor.info.mypage.dao.MyPagePDAO">
+		<select id="selectMyInfo" parameterType="String" resultType="ProfessorVO">
+		SELECT
+		    B.MEM_NAME, 
+		    B.MEM_PASS, 
+		    B.MEM_TEL, 
+		    B.MEM_ADDR1,
+		    B.MEM_ADDR2, 
+		    B.MEM_EMAIL,
+		   	CASE
+		        WHEN SUBSTR(B.MEM_REG1, 1, 1) = '0' THEN '20' || SUBSTR(B.MEM_REG1, 1, 2)
+		        ELSE '19' || SUBSTR(B.MEM_REG1, 1, 2)
+		    END || '-' || SUBSTR(B.MEM_REG1, 3, 2) || '-' || SUBSTR(B.MEM_REG1, 5, 2) || '('|| 
+            CASE
+                WHEN SUBSTR(B.MEM_REG2, 1, 1) = '1' OR SUBSTR(B.MEM_REG2, 1, 1) = '3' THEN '남'
+                ELSE '여'
+            END ||')' AS BAS,
+            B.MEM_REG1||'-'||SUBSTR(B.MEM_REG2,1,1)||RPAD('*',6,'*') AS MEM_REG1,
+		    B.MEM_BANK, 
+		    B.MEM_BANKNUM, 
+		    B.MEM_DEPO,
+		    B.GF_NO,
+		    A.PMEM_NO, 
+		    A.DEPT_CODE,
+		    D.COL_NAME||' '||C.DEPT_NAME CAD,
+		    TO_CHAR(A.START_DATE, 'YYYY"년" MM"월" DD"일"') AS START_DATE, 
+		    A.PMEM_STATUS, 
+		    A.PMEM_POSITION,
+		    A.PMEM_TA,
+		    CASE 
+        		WHEN A.PMEM_RESP IS NOT NULL THEN A.PMEM_RESP
+        	ELSE '일반교수'
+    		END AS PMEM_RESP
+		FROM
+		    PROFESSOR A
+		JOIN
+		    MEMBER B ON A.PMEM_NO = B.MEM_NO
+		JOIN 
+			DEPARTMENT C ON A.DEPT_CODE = C.DEPT_CODE
+		JOIN 
+            COLLEGE D ON C.COL_CODE = D.COL_CODE
+		WHERE 
+			A.PMEM_NO = #{memNo}
+	</select>
+	<update id="update" parameterType="MemberVO">
+		UPDATE 
+		    MEMBER
+		SET 
+		    MEM_PASS = #{memPass},
+		    MEM_TEL = #{memTel}, 
+		    MEM_ADDR1 = #{memAddr1},
+		    MEM_ADDR2= #{memAddr2}, 
+		    MEM_EMAIL= #{memEmail},
+		    MEM_BANK=#{memBank},
+		    MEM_BANKNUM=#{memBanknum},
+		    GF_NO=#{gfNo}
+		WHERE
+		    MEM_NO=#{memNo}
+	</update>
+</mapper>

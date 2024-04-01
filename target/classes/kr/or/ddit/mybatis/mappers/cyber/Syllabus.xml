@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.professor.cyber.syllabus.dao.SyllabusDAOP">
+<select id="selectTotalRecord" resultType="int">
+	SELECT COUNT(*)
+	FROM LECTURE_PLAN
+</select>
+<select id="selectList" resultType="LecturePlanVO" parameterType="kr.or.ddit.utils.paging.PaginationInfo">
+		SELECT B.*
+		FROM(
+			SELECT ROWNUM RNUM, A.*
+			FROM(
+				SELECT 
+				    c.lp_code, c.lp_content, c.lp_attend_ref,
+				    c.lp_test_ref, c.lp_task_ref, c.lp_note,
+				    c.lp_book, c.lol_code, E.SUB_NAME, lecture.lec_code
+				FROM lecture_plan c
+				left join lecture lecture on c.lol_code = lecture.lol_code
+				LEFT JOIN LEC_OPEN_LIST d ON c.lol_code = d.lol_code
+				LEFT JOIN SUBJECT E ON d.SUB_CODE = E.SUB_CODE
+			) A
+		) B
+		<![CDATA[
+		WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+		]]>
+</select>
+
+<resultMap type="LecturePlanVO" id="lecPlan" autoMapping="true">
+	<id property="lpCode" column="LP_CODE"/>
+	<association property="lecOpenList" javaType="LecOpenListVO" autoMapping="true">
+		<association property="subject" javaType="hashmap">
+			<result property="subCode" column="SUB_CODE"/>
+			<result property="statusCode" column="STATUS_CODE"/>
+			<result property="subName" column="SUB_NAME"/>
+			<result property="subSchyear" column="SUB_SCHYEAR"/>
+			<result property="majorCultural" column="MAJOR_CULTURAL"/>
+			<result property="choiceRequire" column="CHOICE_REQUIRE"/>
+			<result property="subSaved" column="SUB_SAVED"/>
+			<result property="subCredit" column="SUB_CREDIT"/>
+			<result property="subSemester" column="SUB_SEMESTER"/>
+			<result property="deptCode" column="DEPT_CODE"/>
+			<result property="deptName" column="DEPT_NAME"/>
+		</association>
+	</association>
+	<association property="lectureTime" javaType="LectureTimeVO" autoMapping="true">
+	</association>
+	<collection property="lectureContent" ofType="LectureContentVO" javaType="list" autoMapping="false">
+		<id property="lpNo" column="LP_NO"/>
+<!-- 				<result property="lpCode" column="LP_CODE"/> -->
+		<result property="lpContent" column="LP_CON"/>
+	</collection>
+</resultMap>
+
+<select id="select" resultMap="lecPlan" parameterType="String">
+SELECT
+	
+	p.LP_CODE, p.LP_CONTENT, p.LP_ATTEND_REF, p.LP_TEST_REF, p.LP_TASK_REF, 
+	p.LP_NOTE, p.LP_BOOK, p.LOL_CODE, p.LOL_APPNO,
+	
+	lec.LOL_CODE, lec.SUB_CODE, lec.LOL_LIMIT, lec.LOL_SAVED, lec.LOL_DAYCOUNT, 
+	lec.LOL_APPNO, lec.ROOM_NO, lec.PMEM_NO, lec.LEC_APPNO, lec.APP_STATUS, 
+	lec.APP_REJECT, lec.LOL_NAME, 
+	
+	sub.SUB_CODE, sub.SUB_NAME, sub.SUB_SCHYEAR, sub.MAJOR_CULTURAL, sub.CHOICE_REQUIRE, sub.SUB_SAVED,
+	sub.SUB_APPNO, sub.SUB_CREDIT, sub.PMEM_NO, sub.SUB_SEMESTER, sub.STATUS_CODE, sub.REJECT_CODE,
+	sub.APPL_DATE, sub.DEPT_CODE,
+
+	d.dept_code, d.dept_name,
+	
+	m.mem_name,
+	
+	c.LP_CONTENT as lp_con, c.LP_CODE, c.LP_NO,
+	
+	t.LP_CODE, t.LT_DAY, t.LT_TIME, t.LOL_CODE,
+	
+	lecture.LEC_CODE, lecture.LOL_CODE, lecture.LEC_TIME, lecture.GF_NO, lecture.BUILDING_NO, lecture.ROOM_NO
+
+FROM LECTURE LECTURE
+	LEFT JOIN LECTURE_PLAN P ON LECTURE.LOL_CODE = P.LOL_CODE
+	LEFT JOIN LEC_OPEN_LIST lec ON P.LOL_APPNO = LEC.LOL_APPNO
+	LEFT JOIN SUBJECT sub ON lec.SUB_CODE = sub.SUB_CODE
+	LEFT JOIN DEPARTMENT D ON sub.dept_code = D.dept_code
+    LEFT JOIN STATUS S ON lec.app_status = S.STATUS_CODE
+   	LEFT JOIN REJECT R ON lec.app_reject = R.REJECT_CODE
+   	INNER JOIN MEMBER M ON lec.PMEM_NO = M.MEM_NO
+ 	LEFT JOIN LECTURE_CONTENT C ON C.LP_CODE = P.LP_CODE
+ 	LEFT JOIN LECTURE_TIME T ON T.LOL_CODE = P.LOL_CODE
+	WHERE LECTURE.LEC_CODE = #{lecCode}
+	order by c.LP_NO asc
+
+<!-- SELECT  -->
+
+<!-- 			LEC.SUB_CODE, LEC.LOL_LIMIT, LEC.LOL_SAVED -->
+<!-- 			, LEC.LOL_DAYCOUNT, LEC.lol_appno, LEC.ROOM_NO, LEC.PMEM_NO, M.MEM_NAME -->
+<!-- 			, LEC.LEC_APPNO, LEC.APP_STATUS, LEC.APP_REJECT, LEC.LOL_NAME -->
+			
+<!-- 	        , D.DEPT_NAME, SUB.DEPT_CODE -->
+	        
+<!-- 	        , M.MEM_NAME -->
+	        
+<!-- 	        , SUB.SUB_SEMESTER, SUB.SUB_SCHYEAR, D.DEPT_NAME, SUB.MAJOR_CULTURAL -->
+<!-- 	        , SUB.CHOICE_REQUIRE, SUB.SUB_CREDIT, SUB.SUB_NAME -->
+<!-- 	        , P.LP_CODE, P.LP_CONTENT, P.LP_ATTEND_REF, P.LP_TEST_REF -->
+<!-- 			, P.LP_TASK_REF, P.LP_NOTE, P.LP_BOOK -->
+		
+<!-- 			, C.LP_CONTENT as LP_CON, C.LP_NO -->
+			
+<!-- 			, T.LT_DAY, T.LT_TIME -->
+<!-- 		FROM  lecture_plan P -->
+<!-- 		   	LEFT JOIN LEC_OPEN_LIST lec ON P.LOL_APPNO = LEC.LOL_APPNO -->
+<!-- 			LEFT JOIN SUBJECT sub ON lec.SUB_CODE = sub.SUB_CODE -->
+<!-- 			LEFT JOIN DEPARTMENT D ON sub.dept_code = D.dept_code -->
+<!-- 		    LEFT JOIN STATUS S ON lec.app_status = S.STATUS_CODE -->
+<!-- 		   	LEFT JOIN REJECT R ON lec.app_reject = R.REJECT_CODE -->
+<!-- 		   	INNER JOIN MEMBER M ON lec.PMEM_NO = M.MEM_NO -->
+<!-- 	   		LEFT JOIN LECTURE_CONTENT C ON C.LP_CODE = P.LP_CODE -->
+<!-- 	   		LEFT JOIN LECTURE_TIME T ON T.LP_CODE = P.LP_CODE -->
+<!-- 		WHERE lec.app_status = 'STA06' -->
+<!-- 		AND P.LP_CODE = #{lpCode} -->
+
+
+<!--     SELECT -->
+<!--         a.lp_code, a.lp_content, a.lp_attend_ref, -->
+<!--         a.lp_test_ref, a.lp_task_ref, a.lp_note, -->
+<!--         a.lp_book, a.lol_code,  -->
+<!--         b.lp_content,  -->
+<!--         c.lol_limit, -->
+<!--         d.lt_day, d.lt_time, -->
+<!--         e.sub_name, e.sub_schyear, -->
+<!--         e.major_cultural, e.choice_require -->
+<!--     FROM -->
+<!--         lecture_plan a -->
+<!--     LEFT JOIN LEC_OPEN_LIST c ON a.lol_code = c.lol_code -->
+<!--     LEFT JOIN LECTURE_CONTENT b ON a.lp_code = b.lp_code -->
+<!--     LEFT JOIN lecture_time d ON c.lol_code = d.lol_code -->
+<!--     LEFT JOIN subject e ON c.sub_code = e.sub_code -->
+<!--     WHERE a.lp_code = #{lpCode} -->
+</select>
+
+<update id="update" parameterType="LecturePlanVO">
+    UPDATE LECTURE_PLAN a
+    LEFT JOIN LEC_OPEN_LIST c ON a.lol_code = c.lol_code
+    LEFT JOIN LECTURE_CONTENT b ON a.lp_code = b.lp_code
+    LEFT JOIN lecture_time d ON c.lol_code = d.lol_code
+    LEFT JOIN subject e ON c.sub_code = e.sub_code
+    SET
+        a.lp_content    = #{lpContent,jdbcType=VARCHAR},
+        a.lp_attend_ref = #{lpAttendRef,jdbcType=NUMERIC},
+        a.lp_test_ref   = #{lpTestRef,jdbcType=NUMERIC},
+        a.lp_task_ref   = #{lpTaskRef,jdbcType=NUMERIC},
+        a.lp_note       = #{lpNote,jdbcType=VARCHAR},
+        a.lp_book       = #{lpBook,jdbcType=VARCHAR},
+        a.lol_code      = #{lolCode,jdbcType=VARCHAR},
+        c.lol_limit     = #{lolLimit,jdbcType=VARCHAR},
+        d.lt_day        = #{ltDay,jdbcType=VARCHAR},
+        d.lt_time       = #{ltTime,jdbcType=VARCHAR},
+        e.sub_name      = #{subName,jdbcType=VARCHAR},
+        e.sub_schyear   = #{subSchyear,jdbcType=VARCHAR},
+        e.major_cultural= #{majorCultural,jdbcType=VARCHAR},
+        e.choice_require= #{choiceRequire,jdbcType=VARCHAR}
+    WHERE a.lp_code = #{lpCd}
+</update>
+
+<insert id="insert" parameterType="LecturePlanVO">
+		INSERT INTO LECTURE_PLAN(   
+	    	lp_code, lp_content, lp_attend_ref,
+			lp_test_ref, lp_task_ref, lp_note,
+			lp_book, lol_code
+    	)
+		VALUES
+		(
+          #{lpCode,jdbcType=VARCHAR}
+		, #{lpContent,jdbcType=VARCHAR}
+		, #{lpAttendRef,jdbcType=NUMERIC}
+		, #{lpTestRef,jdbcType=NUMERIC}
+		, #{lpTaskRef,jdbcType=NUMERIC}
+		, #{lpNote,jdbcType=VARCHAR}
+		, #{lpBook,jdbcType=VARCHAR}
+		, #{lolCode,jdbcType=VARCHAR}
+		)
+</insert>
+<delete id="delete" parameterType="int">
+	DELETE FROM LECTURE_PLAN WHERE lp_code = #{lpCd}
+</delete>
+</mapper>

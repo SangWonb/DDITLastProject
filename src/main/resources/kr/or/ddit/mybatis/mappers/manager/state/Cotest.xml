@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.manager.stats.cotest.dao.CotestStaDAO">
+	<select id="selectDeptAvg" resultType="CotestResultVO">
+		SELECT
+		    CONCAT('D', SUBSTR(a.mem_no, 5, 2)) AS dept_code,
+		    b.dept_name,
+		    ROUND(AVG(a.ca_01)) AS ca_01,
+		    ROUND(AVG(a.ca_02)) AS ca_02,
+		    ROUND(AVG(a.ca_03)) AS ca_03,
+		    ROUND(AVG(a.ca_04)) AS ca_04,
+		    ROUND(AVG(a.ca_05)) AS ca_05,
+		    ROUND(AVG(a.ca_06)) AS ca_06
+		FROM
+		    cotest_result a
+		JOIN 
+		    department b ON (CONCAT('D', SUBSTR(a.mem_no, 5, 2)) = b.dept_code)
+		GROUP BY
+		    CONCAT('D', SUBSTR(a.mem_no, 5, 2)), b.dept_name
+		ORDER BY
+		    dept_code
+	</select>
+	<select id="selectColAvg" resultType="CotestResultVO">
+		SELECT
+		    c.col_code,
+		    c.col_name,
+		    ROUND(AVG(a.ca_01)) AS ca_01,
+		    ROUND(AVG(a.ca_02)) AS ca_02,
+		    ROUND(AVG(a.ca_03)) AS ca_03,
+		    ROUND(AVG(a.ca_04)) AS ca_04,
+		    ROUND(AVG(a.ca_05)) AS ca_05,
+		    ROUND(AVG(a.ca_06)) AS ca_06
+		FROM
+		    cotest_result a
+		JOIN 
+		    department b ON ('D'||SUBSTR(a.mem_no, 5, 2) = b.dept_code)
+		JOIN
+		    college c ON (b.col_code = c.col_code)
+		GROUP BY
+		    c.col_code, c.col_name
+		ORDER BY
+    		c.col_code
+	</select>
+	<select id="selectHruAvg" resultType="CotestResultVO">
+		SELECT
+		    ROUND(AVG(ca_01)) AS ca_01,
+		    ROUND(AVG(ca_02)) AS ca_02,
+		    ROUND(AVG(ca_03)) AS ca_03,
+		    ROUND(AVG(ca_04)) AS ca_04,
+		    ROUND(AVG(ca_05)) AS ca_05,
+		    ROUND(AVG(ca_06)) AS ca_06
+		FROM
+		    cotest_result
+	</select>
+	<select id="selectCate" resultType="CotestQuestionVO">
+		SELECT DISTINCT 
+			cotest_area, cotest_area_code
+		FROM 
+			cotest_question
+		order by 
+			cotest_area_code
+	</select>
+</mapper>

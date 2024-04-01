@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="kr.or.ddit.manager.stu.criteria.attendancecriteria.dao.AttendCriteriaDAO">
+	
+	<update id="updateAttendCriteria" parameterType="AttendCriteriaVO">
+		UPDATE attend_criteria
+		SET
+		    atc_percent = #{atcPercent}
+		WHERE
+		    atc_code = #{atcCode}
+	</update>
+	
+	<select id="selectAttendCriteria" resultType="AttendCriteriaVO">
+		SELECT
+		    atc_code,
+		    atc_percent
+		FROM
+		    attend_criteria
+	</select>
+	
+	<select id="selectAttendance" resultType="int">
+		SELECT atc_percent
+		FROM attend_criteria
+		WHERE atc_code = '출석'
+	</select>
+	
+	<select id="selectLeave" resultType="int">
+		SELECT atc_percent
+		FROM attend_criteria
+		WHERE atc_code = '조퇴'
+	</select>
+	
+	<select id="selectLate" resultType="int">
+		SELECT atc_percent
+		FROM attend_criteria
+		WHERE atc_code = '지각'
+	</select>
+	
+	<select id="selectAbsent" resultType="int">
+		SELECT atc_percent
+		FROM attend_criteria
+		WHERE atc_code = '결석'
+	</select>
+	
+	<select id="selectF" resultType="int">
+		SELECT atc_percent
+		FROM attend_criteria
+		WHERE atc_code = 'F'
+	</select>
+	
+</mapper>

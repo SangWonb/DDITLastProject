@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.manager.stu.academicchange.dao.AcademicChangeCreditDAOM">
+<select id="selectCreditList" resultType="AcademicRecordChangeVO" parameterType="String">
+SELECT 
+	O.LOL_NAME, 
+	S.MAJOR_CULTURAL, S.CHOICE_REQUIRE, S.SUB_CREDIT, S.SUB_SEMESTER,
+	D.DEPT_NAME, D.DEPT_MRC, d.dept_moc, D.DEPT_CRC, D.DEPT_COC
+FROM REGISTRATION R
+	INNER JOIN LECTURE L ON L.LEC_CODE = R.LEC_CODE
+	INNER JOIN LEC_OPEN_LIST O ON O.LOL_CODE = L.LOL_CODE
+	INNER JOIN SUBJECT S ON S.SUB_CODE = O.SUB_CODE
+	INNER JOIN STUDENT ST ON ST.SMEM_NO = R.SMEM_NO
+	INNER JOIN DEPARTMENT D ON D.DEPT_CODE = ST.DEPT_CODE
+where R.smem_no = #{smemNo}
+</select>
+</mapper>

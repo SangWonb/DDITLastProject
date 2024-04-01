@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.professor.cyber.attendance.dao.AttendDAO">
+	
+	<select id="selectLectureDate" parameterType="String" resultType="String">
+		select lol.lec_appno
+		from lecture L
+		     INNER JOIN lec_open_list LOL on L.lol_code = LOL.lol_code
+		where lec_code = #{lecCode}
+	</select>
+	
+	<select id="selectStartDate" parameterType="kr.or.ddit.student.info.signupclasses.vo.SignUpVO" resultType="String">
+		SELECT
+		    cldr_start
+		FROM
+		    calendar
+		WHERE
+		    CLDR_TYPE = 'ST'
+		<![CDATA[
+		    AND cldr_start >= #{semesterStart,jdbcType=DATE}
+		    AND cldr_start <= #{semesterEnd,jdbcType=DATE}
+		]]>
+	</select>
+	
+	<select id="selectClassCount" parameterType="String" resultType="int">
+		select lol.lol_daycount
+		from lecture L
+		     INNER JOIN lec_open_list LOL on L.lol_code = LOL.lol_code
+		where lec_code = #{lecCode}
+	</select>
+	
+	<select id="selectDayList" parameterType="String" resultType="LectureTimeVO">
+		select LT.lt_day
+		from lecture L
+		     INNER JOIN lec_open_list LOL on L.lol_code = LOL.lol_code
+		     INNER JOIN lecture_time LT on LOL.lol_code = LT.lol_code
+		where lec_code = #{lecCode}
+		ORDER BY LT.lt_day
+	</select>
+	
+	<select id="selectStudentList" parameterType="String" resultType="StudentVO">
+		SELECT
+		    R.smem_no,
+		    M.mem_name,
+		    D.dept_name
+		FROM
+		    registration R
+		        LEFT OUTER JOIN student S on R.smem_no = S.smem_no
+		        LEFT OUTER JOIN member M on R.smem_no = M.mem_no
+		        LEFT OUTER JOIN department D on S.dept_code = D.dept_code
+		WHERE lec_code = #{lecCode}
+		ORDER BY R.smem_no
+	</select>
+	
+	<select id="selectAttend" parameterType="AttendVO" resultType="AttendVO">
+		SELECT
+		    A.at_no,
+		    A.at_code,
+		    A.at_date,
+		    A.smem_no,
+		    A.lec_code
+		FROM
+		    attend A
+		WHERE A.lec_code = #{lecCode}
+		AND A.smem_no = #{smemNo}
+	    AND A.at_date = TO_DATE(#{attendDateString},'YYYY-MM-DD')
+	</select>
+	
+	<select id="selectAttendPK" parameterType="String" resultType="AttendVO">
+		SELECT
+		    A.at_no,
+		    A.at_code,
+		    A.at_date,
+		    A.smem_no,
+		    A.lec_code
+		FROM
+		    attend A
+		WHERE A.at_no = #{atNo}
+	</select>
+	
+	<select id="selectAttendance" parameterType="String" resultType="int">
+		SELECT count(*)
+		FROM
+		    attend A
+		WHERE A.lec_code = #{lecCode}
+		AND A.smem_no = #{smemNo}
+        AND A.at_code in ('출석','공결')
+	</select> 
+	
+	<select id="selectAbsent" parameterType="String" resultType="int">
+		SELECT count(*)
+		FROM
+		    attend A
+		WHERE A.lec_code = #{lecCode}
+		AND A.smem_no = #{smemNo}
+        AND A.at_code = '결석'
+	</select>
+	
+	<select id="selectLate" parameterType="String" resultType="int">
+		SELECT count(*)
+		FROM
+		    attend A
+		WHERE A.lec_code = #{lecCode}
+		AND A.smem_no = #{smemNo}
+        AND A.at_code = '지각'
+	</select>
+	
+	<select id="selectLeave" parameterType="String" resultType="int">
+		SELECT count(*)
+		FROM
+		    attend A
+		WHERE A.lec_code = #{lecCode}
+		AND A.smem_no = #{smemNo}
+        AND A.at_code = '조퇴'
+	</select>
+	
+	<update id="updateAttend" parameterType="AttendVO">
+		UPDATE attend
+		SET
+		    at_code = #{atCode}
+		WHERE
+		    at_date = TO_DATE(#{attendDateString},'YYYY-MM-DD')
+		    AND smem_no = #{smemNo}
+		    AND lec_code = #{lecCode}
+	</update>
+	
+	<update id="updateAttendPk" parameterType="AttendVO">
+		UPDATE attend
+		SET
+		    at_code = #{atCode}
+		WHERE
+		    at_no = #{atNo}
+	</update>
+	
+	<insert id="insertAttend" parameterType="AttendVO">
+		<selectKey order="BEFORE" keyProperty="atNo" resultType="string">
+			SELECT 'AT' || LPAD(TO_CHAR(NVL(MAX(to_number(substr(at_no,4))), 0)+1), 7, '0')   
+			FROM attend
+		</selectKey>
+		INSERT INTO attend (
+		    at_no,
+		    at_code,
+		    at_date,
+		    smem_no,
+		    lec_code
+		) VALUES (
+		     #{atNo}
+		    ,#{atCode}
+		    ,TO_DATE(#{attendDateString},'YYYY-MM-DD')
+		    ,#{smemNo}
+		    ,#{lecCode}
+		)
+	</insert>
+	
+</mapper>

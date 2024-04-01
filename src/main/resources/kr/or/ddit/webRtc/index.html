@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <title>Realtime communication with WebRTC</title>
+  <link rel="stylesheet" href="../resources/css/webRtc.css" />
+
+</head>
+
+<body>
+
+   <div style="text-align: center;">
+		<h1>한국인재대학교 비대면상담(화상상담)</h1>
+        <span id="clock" style="color:gray; font-size: 20px;">clock</span>
+        <span id="apm" style="color:gray; font-size: 20px;"  >ampm</span>
+    </div>
+  <div style="margin-bottom:20px; margin-left: 70%;">
+  	 <button class="btn btn-primary" id="soundToggle">소리</button>
+    <button class="btn btn-secondary" id="hangupButton">퇴장하기</button>
+  </div> 
+  <div id="videos" style="margin-left:10%; margin-top:10px; ">
+	    <video id="localVideo" autoplay playsinline></video>
+	    <video id="remoteVideo" autoplay playsinline></video>
+  </div>
+  
+	<script>
+	
+        var Target = document.getElementById("clock");
+        var Target_apm = document.getElementById("apm");
+        function clock() {
+            var time = new Date();
+
+            var month = time.getMonth();
+            var date = time.getDate();
+            var day = time.getDay();
+            var week = ['일', '월', '화', '수', '목', '금', '토'];
+
+            var hours = time.getHours();
+            var minutes = time.getMinutes();
+            var seconds = time.getSeconds();
+            var AmPm ="AM";
+            if(hours > 12){   
+                var AmPm ="PM";
+                hours %= 12;
+            }
+
+            Target.innerText = 
+            `${month + 1}월 ${date}일 ${week[day]}요일 ` +
+            `${hours < 10 ? `0${hours}` : hours}:${minutes < 10 ? `0${minutes}` : minutes}:${seconds < 10 ? `0${seconds}` : seconds}`;
+            
+            Target_apm.innerText = `${AmPm}`;
+
+        }
+        clock();
+        setInterval(clock, 1000); // 1초마다 실행
+        
+        var soundToggleBtn = document.getElementById('soundToggle');
+        
+        soundToggleBtn.addEventListener('click', function() {
+            // 현재 영상의 뮤트 상태를 확인합니다.
+            var isMuted = localVideo.muted;
+
+            // 영상의 mute 상태를 토글합니다.
+            localVideo.muted = !isMuted;
+
+            // 버튼의 클래스를 변경합니다.
+            if (localVideo.muted) {
+                soundToggleBtn.innerText = '소리해제';
+                soundToggleBtn.classList.remove('muted');
+                soundToggleBtn.classList.add('unmuted');
+            } else {
+                soundToggleBtn.innerText = '소리';
+                soundToggleBtn.classList.remove('unmuted');
+                soundToggleBtn.classList.add('muted');
+            }
+        });
+        
+  
+    </script>
+  <!-- This file is automatically added/served when running "node index.js". -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+  <script src="../resources/js/webRtc.js"></script>
+
+</body>
+
+</html>

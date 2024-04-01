@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.careerup.employment.employmentreview.dao.EmploymentReviewDAOS">
+<sql id="searchFrag">
+      <trim prefix="WHERE" prefixOverrides="AND">
+         <if test="not detailCondition.empty">
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+               <choose>
+                  <when test="simpleCondition.searchType eq 'title'">
+                     INSTR(emp_title, #{simpleCondition.searchWord}) > 0
+                  </when>
+                  <when test="simpleCondition.searchType eq 'content'">
+                     INSTR(emp_comment, #{simpleCondition.searchWord}) > 0
+                  </when>
+                  <otherwise>
+                     INSTR(emp_title, #{simpleCondition.searchWord}) > 0
+                     OR                     
+                     INSTR(emp_comment, #{simpleCondition.searchWord}) > 0
+                  </otherwise>
+               </choose>
+            </if>
+         </if>
+      </trim>
+   </sql>
+<select id="selectTotalRecord" resultType="int">
+	SELECT COUNT(*)
+	FROM EMPLOYMENT_REVIEW
+	<include refid="searchFrag"/>
+</select>
+<select id="selectList" resultType="EmploymentReviewVO" parameterType="kr.or.ddit.utils.paging.PaginationInfo">
+		SELECT B.*
+		FROM(
+			SELECT ROWNUM RNUM, A.*
+			FROM(
+				SELECT 
+			       E.emp_no, E.smem_no, E.emp_title, E.emp_date,
+			       M.MEM_NAME, D.DEPT_NAME, E.emp_comment
+				FROM EMPLOYMENT_REVIEW E
+				LEFT JOIN MEMBER M ON M.MEM_NO = E.SMEM_NO
+				LEFT JOIN STUDENT S ON S.SMEM_NO = E.SMEM_NO
+				LEFT JOIN DEPARTMENT D ON S.DEPT_CODE = D.DEPT_CODE
+				<include refid="searchFrag"/>
+			) A
+		) B
+		<![CDATA[
+		WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+		]]>
+</select>
+<select id="select" resultType="EmploymentReviewVO" parameterType="String">
+	SELECT 
+		E.emp_no, E.smem_no, E.emp_title, E.emp_comment, E.emp_date, M.MEM_NAME, D.DEPT_NAME
+	FROM EMPLOYMENT_REVIEW E
+		LEFT JOIN MEMBER M ON M.MEM_NO = E.SMEM_NO
+		LEFT JOIN STUDENT S ON S.SMEM_NO = E.SMEM_NO
+		LEFT JOIN DEPARTMENT D ON S.DEPT_CODE = D.DEPT_CODE
+	WHERE E.EMP_NO = #{empNo}
+</select>
+</mapper>

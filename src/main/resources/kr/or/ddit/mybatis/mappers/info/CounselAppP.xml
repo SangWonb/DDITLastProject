@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.professor.info.counsel.counselappl.dao.CounselAppPDAO">
+	<select id="selectCounsNo" parameterType="String" resultType="String">
+		SELECT 
+			'CA' || #{memNo} || 
+		       LPAD((SELECT TO_NUMBER(MAX(SUBSTR(COUNS_NO, 12, 2))) + 1 
+		             FROM COUNSEL 
+		             WHERE MEM_NO = #{memNo}), 
+		            2, '0')
+		FROM 
+			DUAL
+	</select>
+	<select id="selectWaitingCount" parameterType="String" resultType="int">
+		SELECT 
+		    COUNT(COUNS_NO) 
+		FROM 
+		    COUNSEL 
+		WHERE 
+		    COUNS_STATUS = 'STA08' 
+		AND 
+		    COUNS_PRO = #{pmemNo}
+	</select>
+	<select id="selectCounselList" parameterType="String" resultType="CounselVO">
+		SELECT
+		    couns_appno,
+		    couns_datetime,
+		    couns_reason,
+		    couns_method,
+		    couns_type,
+		    couns_status,
+		    mem_no,
+		    couns_pro,
+		    couns_title
+		FROM
+		    counsel
+		WHERE 
+		    COUNS_PRO=#{pmemNo}
+		AND
+		    COUNS_STATUS='STA08'
+	</select>
+	<select id="select" parameterType="String" resultType="CounselVO">
+		SELECT
+		    couns_appno,
+		    couns_datetime,
+		    couns_reason,
+		    couns_method,
+		    couns_type,
+		    couns_status,
+		    mem_no,
+		    couns_pro,
+		    couns_title
+		FROM
+		    counsel
+		WHERE 
+		    couns_appno=#{counsAppno}
+	</select>
+	<update id="update" parameterType="String">
+		UPDATE
+		    COUNSEL
+		SET
+		    COUNS_NO = #{counsNo},
+		    COUNS_STATUS = #{counsStatus}
+		WHERE
+		    COUNS_APPNO = #{counsAppno}
+	</update>
+</mapper>

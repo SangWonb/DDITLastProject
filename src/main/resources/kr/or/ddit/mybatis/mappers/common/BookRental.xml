@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.book.popularbook.dao.PopularBookDAOC">
+
+	<resultMap type="BookRentalVO" id="popBook" autoMapping="true">
+		<id property="rentCode" column="RENT_CODE" />
+		<association property="bookInfo" javaType="hashMap" >
+			<result property="bookName" column="BOOK_NAME" />
+			<result property="bookWriter" column="BOOK_WRITER" />
+			<result property="bookCompany" column="BOOK_COMPANY" />
+			<result property="bookCategory" column="BOOK_CATEGORY" />
+		</association>
+	</resultMap>
+
+	<select id="selectPopBook" resultMap="popBook">
+		SELECT *
+		FROM (
+		    SELECT COUNT(A.RENT_CODE) AS 누적,
+		           A.BOOK_CODE,
+		           B.BOOK_NAME,
+		           B.BOOK_WRITER,
+		           B.BOOK_COMPANY,
+		           B.BOOK_CATEGORY,
+		           ROW_NUMBER() OVER (ORDER BY COUNT(A.RENT_CODE) DESC) AS RNUM
+		    FROM BOOKRENTAL A 
+		    JOIN BOOK B ON A.BOOK_CODE = B.BOOK_CODE
+		    <![CDATA[
+		    WHERE 
+		        A.RENT_START >= SYSDATE -100
+		    AND 
+		        A.RENT_START <> SYSDATE
+		    GROUP BY A.BOOK_CODE, B.BOOK_WRITER, B.BOOK_COMPANY, B.BOOK_CATEGORY, B.BOOK_NAME
+		)
+		WHERE RNUM <= 3
+		]]>
+	</select>
+
+</mapper>

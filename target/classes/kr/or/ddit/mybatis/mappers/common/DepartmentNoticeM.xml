@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.manager.com.board.departmentnotice.dao.DepartmentNoticeDAOM">
+<sql id="searchFrag">
+      <trim prefix="AND" prefixOverrides="AND">
+         <if test="not detailCondition.empty">
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+               <choose>
+                  <when test="simpleCondition.searchType eq 'cmntTitle'">
+                     INSTR(CMNT_TITLE, #{simpleCondition.searchWord}) > 0
+                  </when>
+                  <when test="simpleCondition.searchType eq 'cmntContent'">
+                     INSTR(CMNT_CONTENT, #{simpleCondition.searchWord}) > 0
+                  </when>
+                  <when test="simpleCondition.searchType eq 'deptName'">
+                     INSTR(DEPT_NAME, #{simpleCondition.searchWord}) > 0
+                  </when>
+                  <otherwise>
+                     (INSTR(CMNT_TITLE, #{simpleCondition.searchWord}) > 0
+                     OR                     
+                     INSTR(CMNT_CONTENT, #{simpleCondition.searchWord}) > 0)
+                  </otherwise>
+               </choose>
+            </if>
+         </if>
+      </trim>
+   </sql>
+   
+<resultMap type="CommunityVO" id="noticeMap" autoMapping="true">
+	<id property="cmntCode" column="cmnt_code"/>
+	<collection property="fileList" javaType="list" ofType="FileVO" autoMapping="true">
+		<id property="fileNo" column="file_no"/>
+	</collection>
+</resultMap>
+   
+<select id="selectTotalRecord" resultType="int">
+	select count(*) 
+	from community c
+	left join department de on c.dept_code = de.dept_code
+	WHERE cmnt_code LIKE 'DN%'
+	<include refid="searchFrag"/>
+</select>
+<select id="selectList" resultType="CommunityVO" parameterType="kr.or.ddit.utils.paging.PaginationInfo">
+	SELECT B.*
+		FROM(
+			SELECT ROWNUM RNUM, A.*
+			FROM(
+				SELECT 
+				    c.cmnt_code, c.cmnt_title, c.cmnt_content,
+				    c.cmnt_date, c.cmnt_count,
+				    c.gf_no,
+				    c.bo_parent, c.mem_no, c.dept_code, d.mem_name
+				    , de.dept_name
+				FROM community c
+				left join member d on c.mem_no = d.mem_no
+				left join department de on c.dept_code = de.dept_code
+				WHERE cmnt_code LIKE 'DN%'
+				<include refid="searchFrag"/>
+			) A
+		) B
+		<![CDATA[
+		WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+		]]>
+</select>
+<select id="select" parameterType="String" resultMap="noticeMap">
+	SELECT 
+	    a.cmnt_code, a.cmnt_title, a.cmnt_content,
+	    a.cmnt_date, a.cmnt_count,
+	    a.gf_no, b.mem_name,
+	    a.bo_parent, a.mem_no, a.dept_code
+	     ,F.file_no,F.file_nm,F.file_save,F.mime,F.file_size,F.fancy_size,F.gf_no
+	FROM community a
+	left join member b on a.mem_no = b.mem_no
+	LEFT OUTER JOIN "FILE" F on a.gf_no = F.gf_no
+	WHERE cmnt_code = #{cmntCode}
+</select>
+
+<update id="update" parameterType="String">
+	UPDATE COMMUNITY
+SET 
+    CMNT_TITLE = #{cmntTitle,jdbcType=VARCHAR},
+    CMNT_CONTENT = #{cmntContent,jdbcType=VARCHAR},
+    GF_NO = #{gfNo,jdbcType=VARCHAR},
+    DEPT_CODE = #{deptCode,jdbcType=VARCHAR}
+WHERE
+    CMNT_CODE = #{cmntCode}
+</update>
+
+<insert id="insert" parameterType="CommunityVO">
+	<selectKey order="BEFORE" keyProperty="cmntCode" resultType="String">
+		SELECT 'DN' || LPAD(TO_CHAR(NVL(MAX(to_number(substr(cmnt_code,3))), 0)+1), 6, '0')   
+		FROM community
+		WHERE cmnt_code LIKE 'DN%'
+	</selectKey>
+	INSERT INTO community(   
+	    CMNT_CODE, CMNT_TITLE, CMNT_CONTENT, 
+	    GF_NO, MEM_NO, dept_code
+    	)
+		VALUES
+		(
+        #{cmntCode,jdbcType=VARCHAR},
+		#{cmntTitle,jdbcType=VARCHAR},
+		#{cmntContent,jdbcType=VARCHAR},
+		#{gfNo,jdbcType=VARCHAR},
+		#{memNo,jdbcType=VARCHAR},
+		#{deptCode,jdbcType=VARCHAR}
+		)
+</insert>
+<delete id="delete" parameterType="String">
+	delete community
+	where cmnt_code = #{cmntcode}
+</delete>
+</mapper>

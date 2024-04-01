@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.careerup.employment.employmentagency.dao.EmploymentAgencyDAOS">
+<sql id="searchFrag">
+		<trim prefix="WHERE" prefixOverrides="AND">
+			<if test="not detailCondition.empty">
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.titleName)">
+					AND INSTR(TITLE_NAME, #{detailCondition.titleName}) > 0
+				</if>
+<!-- 				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.cmntContent)"> -->
+<!-- 					AND INSTR(CMNT_CONTENT, #{detailCondition.cmntContent}) > 0 -->
+<!-- 				</if> -->
+			</if>
+		</trim>	
+	</sql>
+<select id="selectTotalRecord" resultType="int">
+	SELECT COUNT(*)
+	FROM EMPLOYMENT_PLACE
+	<include refid="searchFrag"/>
+</select>
+<select id="selectList" resultType="EmploymentPlaceVO" parameterType="kr.or.ddit.utils.paging.PaginationInfo">
+	SELECT B.*
+		FROM(
+			SELECT ROWNUM RNUM, A.*
+			FROM(
+				SELECT 
+			       EMPL_CODE, TITLE_NAME, LIMIT_DATE, COMPANY_NAME, EMPL_URL
+				FROM EMPLOYMENT_PLACE
+				<include refid="searchFrag"/>
+			) A
+		) B
+		<![CDATA[
+		WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+		]]>
+</select>
+<select id="selectListForPo" resultType="EmploymentPlaceVO">
+	SELECT B.*
+		FROM(
+			SELECT ROWNUM RNUM, A.*
+			FROM(
+				SELECT 
+			       EMPL_CODE, TITLE_NAME, LIMIT_DATE, COMPANY_NAME, EMPL_URL
+				FROM EMPLOYMENT_PLACE
+			) A
+		) B
+		<![CDATA[
+		WHERE RNUM <= 10
+		]]>
+</select>
+</mapper>

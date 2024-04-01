@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.professor.info.certificate.dao.CertificateDAOP">
+
+	<select id="selectCrtfList" resultType="kr.or.ddit.vo.info.CertificatePVO">
+		SELECT ROWNUM RNUM, CRTFP_NAME, CRTFP_CODE
+		FROM CERTIFICATEP
+	</select>
+	
+	<insert id="insertCrtfRec" parameterType="CertificateRecPVO">
+		<selectKey order="BEFORE" keyProperty="crtfPRecno" resultType="string">
+			SELECT 
+			    'CR'||TO_CHAR(SYSDATE, 'YYMMDD')
+			    || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(CRTFP_RECNO), 9)), 0) + 1, 4, '0') 
+			FROM 
+			    CERTIFICATEP_REC
+			WHERE 
+			    CRTFP_RECNO LIKE 'CR'|| TO_CHAR(SYSDATE, 'YYMMDD') || '%'
+		</selectKey>
+		INSERT INTO 
+		    CERTIFICATEP_REC(
+		        CRTFP_RECNO, MEM_NO, CRTFP_CODE, CRTFP_QTYPT, CRTFP_QTYRG ,CRTFP_QTY, CRTFP_APPDATE
+		    ) 
+		VALUES(
+		    #{crtfPRecno}, #{memNo}, #{crtfPCode}, #{crtfPQtypt}, #{crtfPQtyrg}, #{crtfPQty}, SYSDATE
+		)
+	</insert>
+	
+	<select id="selectRecord" parameterType="string" resultType="ProfessorVO">
+		SELECT 
+		    A.PMEM_NO
+		    , B.MEM_NAME
+		    , A.DEPT_CODE
+		    , C.DEPT_NAME
+		    , A.START_DATE
+		    , A.PMEM_STATUS
+		    , A.PMEM_POSITION
+		    , A.PMEM_RESP
+		    , A.PMEM_TA
+		    , TO_CHAR(SYSDATE,'""YYYY"년 "MM"월 "DD"일"') AS TODAY
+		FROM 
+		    PROFESSOR A
+		JOIN 
+		    MEMBER B ON (A.PMEM_NO = B.MEM_NO)
+		JOIN 
+			DEPARTMENT C ON (A.DEPT_CODE = C.DEPT_CODE)
+		WHERE PMEM_NO = #{pmemNo}
+	</select>	
+
+	<select id="selectCertifiRecList" parameterType="CertificateRecPVO">
+		SELECT
+			A.CRTFP_RECNO, 
+		    A.CRTFP_CODE,
+		    B.CRTFP_NAME,
+		    A.CRTFP_QTYRG,
+		    A.CRTFP_QTYPT,
+		    A.CRTFP_QTY,
+		    A.CRTFP_APPDATE,
+		    A.CRTFP_DATE
+		FROM 
+		    CERTIFICATEP_REC A
+		JOIN 
+		    CERTIFICATEP B ON A.CRTFP_CODE = B.CRTFP_CODE
+		JOIN 
+		    PROFESSOR C ON A.MEM_NO = C.PMEM_NO
+		WHERE 
+		    C.PMEM_NO = #{pmemNo}
+	</select>
+
+	<insert id="insertCrtfGno" parameterType="string">
+		INSERT INTO 
+			CERTIFICATEP_GNO (CRTFP_GNO, CRTFP_RECNO, CRTFP_DATE)
+		SELECT
+			SUBSTR(CRTFP_GNO, 1, 4) || '-' || SUBSTR(CRTFP_GNO, 5, 4) || '-' || SUBSTR(CRTFP_GNO, 9, 4) || '-' || SUBSTR(CRTFP_GNO, 13, 4) AS CRTFP_GNO
+			, #{crtfPRecno} AS CRTFP_RECNO
+			, SYSDATE AS CRTFP_DATE
+		FROM (
+		SELECT
+			SUBSTR(DBMS_RANDOM.STRING('X', 16) || DBMS_RANDOM.STRING('N', 8), 1, 16) AS CRTFP_GNO
+		FROM
+			DUAL
+		)
+	</insert>
+	
+		<update id="updateCrtfRec" parameterType="String">
+		UPDATE 
+	    	CERTIFICATEP_REC
+	    SET 
+	        CRTFP_QTYPT = CRTFP_QTYPT + 1
+	        , CRTFP_QTYRG = CRTFP_QTYRG - 1
+	        , CRTFP_DATE = SYSDATE
+	    WHERE 
+	        CRTFP_RECNO = #{crtfPRecno}
+	</update>
+
+	<select id="selectGno" parameterType="CertificateGnoPVO">
+		SELECT B.*
+		FROM (
+		    SELECT ROWNUM RNUM, A.*
+		    FROM (
+		        SELECT 
+		        	C.*, D.CRTFP_QTYPT
+		        FROM 
+		        	CERTIFICATEP_GNO C
+		        JOIN CERTIFICATEP_REC D ON C.CRTFP_RECNO = D.CRTFP_RECNO
+		        WHERE 
+		        	C.CRTFP_RECNO = #{crtfPRecno}
+		        ORDER BY C.crtfp_date DESC
+		    ) A
+		) B
+		<![CDATA[
+		WHERE B.RNUM <= #{crtfPQtypt}
+		]]>
+	</select>
+
+</mapper>

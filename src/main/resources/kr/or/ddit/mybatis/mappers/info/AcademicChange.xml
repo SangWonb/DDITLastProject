@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.info.academicchange.dao.AcademicChangeDAO">
+		
+	<select id="selectTotalRecord" resultType="int">
+		SELECT COUNT(*)
+		FROM scholaship
+	</select>
+	<select id="selectType" resultType="AcademicClassificationVO">
+		SELECT 
+   			AC_CODE, AC_NAME
+		FROM 
+    		ACADEMIC_CLASSIFICATION
+    	WHERE
+    		AC_NEED = 'Y'
+	</select>
+	<select id="selectList" resultType="AcademicRecordChangeVO" parameterType="String">
+		SELECT
+		    A.arc_no,
+		    A.ac_code,
+		    B.AC_NAME,
+		    A.arc_reason,
+		    A.mem_no,
+		    C.MEM_NAME,
+		    A.arc_state,
+		    j.status_nm,
+		    A.arc_reject,
+		    H.REJECT_REASON,
+		    A.gf_no,
+		    A.arc_date,
+		    A.arc_year,
+		    A.arc_semester,
+		    E.VALUE,
+		    D.DEPT_CODE,
+		    F.DEPT_NAME,
+		    A.arc_confirmdate,
+		    D.STU_RECORD,
+		    G.AC_NAME AS NOW_AC,
+		    D.SMEM_SEMESTER,
+		    D.STU_GR,
+		    CASE
+		            WHEN SUBSTR(C.MEM_REG1, 1, 1) = '0' THEN '20' || SUBSTR(C.MEM_REG1, 1, 2)
+		            ELSE '19' || SUBSTR(C.MEM_REG1, 1, 2)
+		    END || '-' || SUBSTR(C.MEM_REG1, 3, 2) || '-' || SUBSTR(C.MEM_REG1, 5, 2) || '('|| 
+		    CASE
+		            WHEN SUBSTR(C.MEM_REG2, 1, 1) = '1' OR SUBSTR(C.MEM_REG2, 1, 1) = '3' THEN '남'
+		            ELSE '여'
+		    END ||')' AS BAS,
+		    D.STU_JOINYEAR ||  (SELECT VALUE FROM COMMON WHERE NAME = 'AC07')||'(입학)' AS STU_JOINYEAR,
+		    I.COL_NAME||' '||F.DEPT_NAME CAD
+		FROM
+		    academic_record_change A
+		JOIN
+		    academic_classification B ON (A.AC_CODE=B.AC_CODE)
+		JOIN 
+		    MEMBER C ON (A.MEM_NO=C.MEM_NO)
+		JOIN
+		    STUDENT D ON (A.MEM_NO=D.SMEM_NO)
+		JOIN
+		    COMMON E ON (A.ARC_SEMESTER=E.NAME)
+		JOIN
+		    DEPARTMENT F ON (D.DEPT_CODE = F.DEPT_CODE)
+		JOIN 
+		    academic_classification G ON (D.STU_RECORD=G.AC_CODE)
+		LEFT OUTER JOIN
+		    REJECT H ON(A.ARC_REJECT = H.REJECT_CODE)
+		JOIN 
+		    college I ON (F.COL_CODE=I.COL_CODE)
+		JOIN
+			STATUS J ON(A.ARC_STATE=J.STATUS_CODE)
+		WHERE 
+		    A.MEM_NO = #{memNo}
+		ORDER BY A.ARC_DATE DESC ,A.ARC_STATE
+	</select>
+	<select id="selectRecord" resultType="AcademicRecordChangeVO" parameterType="String">
+		SELECT
+		    A.arc_no,
+		    A.ac_code,
+		    B.AC_NAME,
+		    A.arc_reason,
+		    A.mem_no,
+		    C.MEM_NAME,
+		    A.arc_state,
+		    j.status_nm,
+		    A.arc_reject,
+		    H.REJECT_REASON,
+		    A.gf_no,
+		    A.arc_date,
+		    A.arc_year,
+		    A.arc_semester,
+		    E.VALUE,
+		    D.DEPT_CODE,
+		    F.DEPT_NAME,
+		    A.arc_confirmdate
+		FROM
+		    academic_record_change A
+		JOIN
+		    academic_classification B ON (A.AC_CODE=B.AC_CODE)
+		JOIN 
+		    MEMBER C ON (A.MEM_NO=C.MEM_NO)
+		JOIN
+		    STUDENT D ON (A.MEM_NO=D.SMEM_NO)
+		JOIN
+		    COMMON E ON (A.ARC_SEMESTER=E.NAME)
+		JOIN
+		    DEPARTMENT F ON (D.DEPT_CODE = F.DEPT_CODE)
+		JOIN 
+		    academic_classification G ON (D.STU_RECORD=G.AC_CODE)
+		LEFT OUTER JOIN
+		    REJECT H ON(A.ARC_REJECT = H.REJECT_CODE)
+		JOIN
+			STATUS J ON(A.ARC_STATE=J.STATUS_CODE)
+		WHERE 
+		    A.arc_no={arcNo}
+	</select>
+	<insert id="insertOne" parameterType="AcademicRecordChangeVO"  >
+		<selectKey order="BEFORE" keyProperty="arcNo" resultType="string">
+		    SELECT 'ARC' || TO_CHAR(SYSDATE, 'YYMMDD') || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(ARC_NO), 9)), 0) + 1, 4, '0')
+		    FROM ACADEMIC_RECORD_CHANGE
+		    WHERE ARC_NO LIKE 'ARC' || TO_CHAR(SYSDATE, 'YYMMDD') || '%'
+		</selectKey>
+
+		INSERT INTO 
+		    ACADEMIC_RECORD_CHANGE(
+		        ARC_NO,AC_CODE,ARC_REASON,ARC_YEAR,ARC_STATE,
+		        ARC_SEMESTER,MEM_NO,ARC_DATE) 
+		VALUES 
+		    (
+		    #{arcNo},#{acCode}, #{arcReason},#{arcYear},'STA01',
+		    #{arcSemester},#{memNo},SYSDATE
+		)
+	</insert>
+	<update id="updateOne" parameterType="AcademicRecordChangeVO">
+		UPDATE ACADEMIC_RECORD_CHANGE
+		SET 
+		    AC_CODE = #{acCode},
+		    ARC_REASON = #{arcReason},
+		    ARC_START = #{arcStart},
+		    ARC_END = #{arcEnd}
+		WHERE 
+		    ARC_NO = #{arcNo}
+	</update>
+	<delete id="deleteOne" parameterType="String">
+		DELETE FROM 
+			ACADEMIC_RECORD_CHANGE
+		WHERE ARC_NO = #{arcNo}
+	</delete>
+
+</mapper>

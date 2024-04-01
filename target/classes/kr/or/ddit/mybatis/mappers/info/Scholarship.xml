@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.info.scholarship.dao.ScholarshipDAO">
+
+
+	<resultMap type="ScholashipRecVO" id="scholashipList" autoMapping="true">
+		<id property = "scholNo" column="SCHOL_NO"/>
+		<association property="scholaship" javaType="ScholashipVO">
+			<id property="scholCode" column="SCHOL_CODE"/>
+			<result property="scholName" column="SCHOL_NAME"/>
+		    <result property="scholCriteria" column="SCHOL_CRITERIA"/>
+		    <result property="scholDm" column="SCHOL_DM"/>
+		    <result property="scholAmt" column="SCHOL_AMT"/>
+		    <result property="scholRp" column="SCHOL_RP"/>
+		</association>
+	</resultMap>
+	<select id="scholashipRecList" resultMap="scholashipList" parameterType="String">
+	SELECT B.*
+		FROM(
+			SELECT ROWNUM RNUM, A.*
+			FROM(
+				SELECT
+				    sr.schol_no, sr.schol_code, sr.smem_no,
+				    sr.schol_date, sr.year_semester,
+                     sc.SCHOL_NAME, sc.SCHOL_CRITERIA, sc.SCHOL_DM, sc.SCHOL_AMT, sc.SCHOL_RP
+				FROM
+				    scholaship_rec sr
+				inner join SCHOLASHIP sc on sr.SCHOL_CODE = sc.SCHOL_CODE
+                where sr.smem_no = #{smemNo}
+   			) A
+		) B
+	</select>
+</mapper>

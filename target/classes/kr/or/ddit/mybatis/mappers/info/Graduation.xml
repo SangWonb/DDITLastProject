@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.info.graduationdiagnosis.dao.GraduationDAO">
+
+	<select id="selectGradList" parameterType="DepartmentVO">
+		SELECT
+		    A.SMEM_NO
+		    , B.DEPT_CODE
+		    , C.DEPT_MRC
+		    , C.DEPT_MOC
+		    , C.DEPT_MRC + C.DEPT_MOC AS TOTAL_MR_SCORE
+		    , C.DEPT_CRC
+		    , C.DEPT_COC
+		    , C.DEPT_CRC + C.DEPT_COC AS TOTAL_CR_SCORE
+		    , C.DEPT_MRC + C.DEPT_MOC + C.DEPT_CRC + C.DEPT_COC AS TOTAL_D_SCORE
+		    , C.DEPT_THESIS
+		    , C.DEPT_TEST
+		FROM
+		    STUDENT A
+		    JOIN GRADUATION_CRITERIA B ON (A.DEPT_CODE = B.DEPT_CODE)
+		    JOIN DEPARTMENT C ON (B.DEPT_CODE = C.DEPT_CODE)
+		WHERE 
+		    A.SMEM_NO = #{smemNo}
+	</select>
+	
+	<select id="selectStuGradList" parameterType="StudentVO">
+		SELECT 
+		    A.SMEM_NO
+		    , B.DEPT_CODE
+		    , A.STU_MNL
+		    , A.STU_MCL
+		    , A.STU_MNL + A.STU_MCL AS TOTAL_M_SCORE
+		    , A.STU_CNL
+		    , A.STU_CCL
+		    , A.STU_CNL + A.STU_CCL AS TOTAL_F_SCORE
+		    , A.STU_MNL + A.STU_MCL + A.STU_CNL + A.STU_CCL AS TOTAL_SCORE
+		    , A.STU_GESTATUS
+		    , A.STU_GTSTATUS
+		FROM 
+		    STUDENT A
+		    JOIN GRADUATION_CRITERIA B ON (A.DEPT_CODE = B.DEPT_CODE)
+		WHERE 
+		    A.SMEM_NO = #{smemNo}
+	</select>
+
+</mapper>
+

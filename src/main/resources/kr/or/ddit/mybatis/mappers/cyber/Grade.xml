@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.professor.cyber.grade.dao.GradeDAO">
+	
+	<select id="selectGradeList" parameterType="map" resultType="LecGradeCvtVO">
+		WITH LGCLIST AS(
+		SELECT
+		    R.smem_no,
+		    M.mem_name,
+		    D.dept_name,
+		    LGC.lgc_code,
+		    LGC.lec_code,
+		    LGC.lgc_attend,
+		    LGC.lgc_midterm,
+		    LGC.lgc_final,
+		    LGC.lgc_task,
+		    LGC.lgc_ranking,
+		    LGC.lgc_percent,
+		    LGC.lgc_totalscore,
+		    LGC.lgc_grade
+		FROM
+		    registration R
+		        LEFT OUTER JOIN student S on R.smem_no = S.smem_no
+		        LEFT OUTER JOIN member M on R.smem_no = M.mem_no
+		        LEFT OUTER JOIN department D on S.dept_code = D.dept_code
+		        LEFT OUTER JOIN lec_grade_cvt LGC on R.lec_code = LGC.lec_code AND R.smem_no=LGC.smem_no
+		WHERE R.lec_code = #{lecCode}
+		ORDER BY R.smem_no
+		), LGCRNUM AS(
+		SELECT ROWNUM RNUM, LGCLIST.*
+		FROM LGCLIST
+		)
+		SELECT LGCRNUM.*
+		FROM LGCRNUM
+		<![CDATA[
+	      WHERE RNUM >= #{paging.startRow} AND RNUM <= #{paging.endRow}
+	   ]]>
+	</select>
+	
+	<select id="selectTotalRecord" parameterType="String">
+		SELECT
+			count(*)
+		FROM
+		    registration R
+		WHERE lec_code = #{lecCode}
+	</select>
+	
+	<select id="selectGrade" parameterType="String" resultType="LecGradeCvtVO">
+		SELECT
+		    R.smem_no,
+		    M.mem_name,
+		    D.dept_name,
+		    LGC.lgc_code,
+		    LGC.lec_code,
+		    LGC.lgc_attend,
+		    LGC.lgc_midterm,
+		    LGC.lgc_final,
+		    LGC.lgc_task,
+		    LGC.lgc_ranking,
+		    LGC.lgc_percent,
+		    LGC.lgc_totalscore,
+		    LGC.lgc_grade
+		FROM
+		    registration R
+		        LEFT OUTER JOIN student S on R.smem_no = S.smem_no
+		        LEFT OUTER JOIN member M on R.smem_no = M.mem_no
+		        LEFT OUTER JOIN department D on S.dept_code = D.dept_code
+		        LEFT OUTER JOIN lec_grade_cvt LGC on R.lec_code = LGC.lec_code AND R.smem_no=LGC.smem_no
+		WHERE R.lec_code = #{lecCode}
+		AND R.smem_no = #{smemNo}
+	</select>
+	
+	<update id="updateGrade" parameterType="LecGradeCvtVO">
+		UPDATE lec_grade_cvt
+		SET
+		    lgc_attend = #{lgcAttend}
+		    , lgc_midterm = #{lgcMidterm}
+		    , lgc_final = #{lgcFinal}
+		    , lgc_task = #{lgcTask}
+		    , lgc_ranking = #{lgcRanking}
+		    , lgc_percent = #{lgcPercent}
+		    , lgc_totalscore = #{lgcTotalscore}
+		    , lgc_grade = #{lgcGrade}
+		WHERE
+		    lec_code = #{lecCode}
+		    AND smem_no = #{smemNo}
+	</update>
+	
+	<insert id="insertGrade" parameterType="LecGradeCvtVO">
+		<selectKey order="BEFORE" keyProperty="lgcCode" resultType="string">
+			SELECT 'LGC' || LPAD(TO_CHAR(NVL(MAX(to_number(substr(lgc_code,4))), 0)+1), 6, '0')   
+			FROM lec_grade_cvt
+		</selectKey>
+		INSERT INTO lec_grade_cvt (
+		    lgc_code,
+		    lec_code,
+		    lgc_attend,
+		    lgc_midterm,
+		    lgc_final,
+		    lgc_task,
+		    lgc_ranking,
+		    lgc_percent,
+		    lgc_totalscore,
+		    smem_no,
+		    lgc_grade
+		) VALUES (
+			#{lgcCode}
+		    ,#{lecCode}
+		    ,#{lgcAttend}
+		    ,#{lgcMidterm}
+		    ,#{lgcFinal}
+		    ,#{lgcTask}
+		    ,#{lgcRanking}
+		    ,#{lgcPercent}
+		    ,#{lgcTotalscore}
+		    ,#{smemNo}
+		    ,#{lgcGrade}
+		)
+	</insert>
+	
+	<select id="selectLecturePlan" parameterType="String" resultType="LecturePlanVO">
+		SELECT
+		    LP.lp_code,
+		    LP.lp_content,
+		    LP.lp_attend_ref,
+		    LP.lp_test_ref,
+		    LP.lp_task_ref,
+		    LP.lp_note,
+		    LP.lp_book,
+		    LP.lol_code,
+		    LP.lol_appno
+		FROM
+		    lecture_plan LP
+		        INNER JOIN lecture L on LP.lol_code = L.lol_code
+		WHERE
+		    L.lec_code = #{lecCode}
+	</select>
+	
+	<select id="selectAllTaskScore" parameterType="String" resultType="int">
+		SELECT
+		    NVL(SUM(total_score),0)
+		FROM
+		    task
+		WHERE lec_code= #{lecCode}
+		    AND task_status = 'ST04'
+	</select>
+	
+	<select id="selectAllTeamProjectScore" parameterType="String" resultType="int">
+		SELECT
+		    NVL(SUM(tp_assscore),0)
+		FROM
+		    team_project
+		WHERE lec_code= #{lecCode}
+		    AND tp_status='ST04'
+	</select>
+	
+	<select id="selectAllTaskScoreS" parameterType="String" resultType="int">
+		SELECT
+		    NVL(SUM(ts.task_score),0)
+		FROM
+		    task T
+		        LEFT OUTER JOIN task_submit TS on T.task_code = TS.task_code
+		WHERE lec_code= 'LEC002'
+		    AND task_status = 'ST04'
+		    AND TS.smem_no = '201313013'
+	</select>
+	
+	<select id="selectAllTeamProjectScoreS" parameterType="String" resultType="int">
+		SELECT
+		    NVL(SUM(t.teampro_score),0)
+		FROM
+		    team_project TP
+		        LEFT OUTER JOIN team T on tp.tp_no = T.tp_no
+		        LEFT OUTER JOIN team_member TM on TM.team_no = T.team_no
+		WHERE lec_code= #{lecCode}
+		    AND tp_status='ST04'
+		    AND TM.smem_no = #{smemNo}
+	</select>
+	
+	<select id="selectMiddleTestScoreS" parameterType="String" resultType="int">
+		SELECT  
+        tg.tg_record
+		FROM
+		    test_grade TG
+		        LEFT OUTER JOIN lec_test LT on LT.lt_code = TG.lt_code
+		WHERE lec_code = #{lecCode}
+		    AND lt_cate = 'TEST01'
+		    AND TG.smem_no = #{param2}
+	</select>
+	
+	<select id="selectFinalTestScoreS" parameterType="String" resultType="int">
+		SELECT  
+        tg.tg_record
+		FROM
+		    test_grade TG
+		        LEFT OUTER JOIN lec_test LT on LT.lt_code = TG.lt_code
+		WHERE lec_code = #{lecCode}
+		    AND lt_cate = 'TEST02'
+		    AND TG.smem_no = #{param2}
+	</select>
+	
+	<delete id="deleteGrades" parameterType="String">
+		DELETE FROM lec_grade_cvt
+		WHERE lec_code = #{lecCode}
+	</delete>
+	
+	<select id="selectGradeDay" parameterType="kr.or.ddit.student.info.signupclasses.vo.SignUpVO" resultType="CalendarVO">
+		SELECT
+		    cldr_start,
+		    cldr_end
+		FROM
+		    calendar
+		WHERE
+		    CLDR_TYPE = 'EV'
+		<![CDATA[
+		    AND cldr_start >= #{semesterStart,jdbcType=DATE}
+		    AND cldr_start <= #{semesterEnd,jdbcType=DATE}
+		]]>
+	</select>
+	
+	
+	
+</mapper>

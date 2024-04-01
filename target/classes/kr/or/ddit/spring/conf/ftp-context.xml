@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:c="http://www.springframework.org/schema/c"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+<!-- 		c:port="#{T(org.apache.commons.net.ftp.FTP).DEFAULT_PORT}" -->
+	<bean id="FTPClientFactory" class="kr.or.ddit.utils.file.FTPClientFactory" 
+		c:host="#{appInfo.ftpHost}"
+		c:port="#{appInfo.ftpPort}"
+		c:user="#{appInfo.ftpUser}"
+		c:password="#{appInfo.ftpPassword}"
+		c:passiveMode="true"
+		c:encoding="UTF-8"
+		c:fileType="#{T(org.apache.commons.net.ftp.FTP).BINARY_FILE_TYPE}"
+		c:timeout="#{1000*60}"
+	/>
+	
+	<bean id="ftpClientPool" class="org.apache.commons.pool2.impl.GenericObjectPool">
+		<constructor-arg name="factory" ref="FTPClientFactory" />
+		<constructor-arg name="config">
+			<bean class="org.apache.commons.pool2.impl.GenericObjectPoolConfig" 
+				p:maxTotal="#{appInfo.ftpMaxTotal}"
+				p:maxIdle="#{appInfo.ftpMaxIdle}"
+				p:maxWaitMillis="#{appInfo.ftpMaxWait}"
+				p:testOnBorrow="true"
+			/>
+		</constructor-arg>
+	</bean>
+</beans>

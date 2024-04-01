@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="kr.or.ddit.manager.stu.studentinfo.dao.StudentListDAO">
+	
+<resultMap type="hashMap" id="deptInfo" autoMapping="true" >
+		<id property="deptCode" column="DEPT_CODE"/>
+		<association property="colInfo" javaType="hashmap">
+				<result property="colName" column="COL_NAME"/>
+		</association>
+	</resultMap>
+
+	<resultMap type="StudentVO" id="myInfo" autoMapping="true">
+		<id property="smemNo" column="SMEM_NO"/>
+		<association property="deptInfo" resultMap="deptInfo"/>
+		<association property="acaInfo" javaType="hashMap">
+			<result property="acName" column="AC_NAME"/>
+		</association>
+		<association property="commonInfo" javaType="hashMap">
+			<result property="name" column="NAME"/>
+			<result property="value" column="VALUE"/>
+			<result property="more" column="MORE"/>
+			<result property="name" column="NOTE"/>
+		</association>
+	</resultMap>
+	
+<select id="selectList" resultType="MemberVO">
+	SELECT
+	    A.mem_no,
+	    A.mem_name,
+	    D.COL_NAME,
+	    D.COL_CODE,
+	    C.DEPT_NAME,
+	    C.DEPT_CODE,
+	    E.AC_NAME,
+	    E.AC_CODE,
+	    A.mem_tel,
+	    A.mem_email,
+	    a.mem_addr1||a.mem_addr2 as mem_addr,
+	    a.mem_Bank,
+        a.mem_banknum,
+        a.mem_depo,
+	    CASE
+	            WHEN SUBSTR(A.MEM_REG1, 1, 1) = '0' THEN '20' || SUBSTR(A.MEM_REG1, 1, 2)
+	            ELSE '19' || SUBSTR(A.MEM_REG1, 1, 2)
+	    END || '-' || SUBSTR(A.MEM_REG1, 3, 2) || '-' || SUBSTR(A.MEM_REG1, 5, 2) || '('|| 
+	    CASE
+	            WHEN SUBSTR(A.MEM_REG2, 1, 1) = '1' OR SUBSTR(A.MEM_REG2, 1, 1) = '3' THEN '남'
+	            ELSE '여'
+	    END ||')' AS BAS
+	FROM
+	    member A
+	JOIN 
+	    STUDENT B ON A.MEM_NO=B.SMEM_NO
+	JOIN 
+	    DEPARTMENT C ON B.DEPT_CODE = C.DEPT_CODE
+	JOIN
+	    COLLEGE D ON C.COL_CODE = D.COL_CODE
+	JOIN 
+	    ACADEMIC_CLASSIFICATION E ON B.STU_RECORD = E.AC_CODE 
+	<![CDATA[ 
+	WHERE 
+		SUBSTR(MEM_NO,7,3) < 500
+	AND 
+		SUBSTR(MEM_NO,5,2) <> 99
+	]]>
+    ORDER BY DEPT_CODE ,MEM_NO
+</select>	
+
+
+<select id="selectTotalRecord" resultType="int">
+		SELECT 
+			COUNT(*)
+		FROM 
+			MEMBER
+		<![CDATA[ 
+		WHERE 
+			SUBSTR(MEM_NO,7,3) < 500
+		AND 
+			SUBSTR(MEM_NO,5,2) <> 99
+		]]>
+</select>
+
+<select id="selectDetail" parameterType="String" resultMap="myInfo">
+		SELECT
+		    B.MEM_NAME,
+		    B.MEM_PASS, 
+		    B.MEM_TEL, 
+		    B.MEM_ADDR1,
+		    B.MEM_ADDR2, 
+		    B.MEM_EMAIL,
+		    CASE
+		        WHEN SUBSTR(B.MEM_REG1, 1, 1) = '0' THEN '20' || SUBSTR(B.MEM_REG1, 1, 2)
+		        ELSE '19' || SUBSTR(B.MEM_REG1, 1, 2)
+		    END || '-' || SUBSTR(B.MEM_REG1, 3, 2) || '-' || SUBSTR(B.MEM_REG1, 5, 2) || '('|| 
+            CASE
+                WHEN SUBSTR(B.MEM_REG2, 1, 1) = '1' OR SUBSTR(B.MEM_REG2, 1, 1) = '3' THEN '남'
+                ELSE '여'
+            END ||')' AS BAS,
+            TO_CHAR(A.STU_CHANGE,'YYYY-MM-DD')||'('||E.AC_NAME||')' AS STU_CHANGE2,
+            B.MEM_REG1||'-'||SUBSTR(B.MEM_REG2,1,1)||RPAD('*',6,'*') AS MEM_REG1,
+		    B.MEM_BANK, 
+		    B.MEM_BANKNUM, 
+		    B.GF_NO, 
+		    B.MEM_DEPO,
+            '학사'||A.STU_GR||'학년('||F.VALUE||')'||E.AC_NAME AS STU_PROG,
+		    A.smem_no, 
+		    A.dept_code,
+		    D.COL_NAME||' '||C.DEPT_NAME CAD, 
+		    F.VALUE,
+		    A.stu_record,
+		    E.AC_NAME, 
+		    A.stu_yn,
+		    A.STU_GR||'학년' AS STU_GR,
+            A.STU_JOINYEAR ||  (SELECT VALUE FROM COMMON WHERE NAME = 'AC07')||'(입학)' AS STU_JOINYEAR
+		FROM
+		    student A
+		JOIN
+		    MEMBER B ON A.SMEM_NO = B.MEM_NO
+        JOIN 
+            DEPARTMENT C ON A.DEPT_CODE =C.DEPT_CODE
+        JOIN 
+            COLLEGE D ON C.COL_CODE = D.COL_CODE
+        JOIN 
+            ACADEMIC_CLASSIFICATION E ON A.STU_RECORD=E.AC_CODE
+        JOIN 
+            COMMON F ON A.SMEM_SEMESTER = F.NAME
+		WHERE 
+			A.SMEM_NO =#{memNo}
+	</select>
+	
+<select id="counsList" parameterType="String" resultType="CounselVO">
+	SELECT 
+	    A.MEM_NAME AS STUDENT_NAME,
+	    D.MEM_NAME AS PROFESSOR_NAME, 
+	    C.COUNS_APPNO,
+	    C.COUNS_NO,
+	    C.COUNS_REASON, 
+	    C.COUNS_CONTENT,
+	    C.COUNS_METHOD,
+	    C.COUNS_STATUS,
+	    E.STATUS_NM,
+	    C.COUNS_DATETIME, 
+	    C.COUNS_TYPE, 
+	    C.COUNS_REJECT,
+	    F.REJECT_REASON,
+	    C.COUNS_PRO,
+	    C.COUNS_NOTICE,
+	    C.MEM_NO,
+        H.DEPT_NAME
+	FROM 
+	    COUNSEL C
+	JOIN 
+	    MEMBER A ON (A.MEM_NO = C.MEM_NO)
+	JOIN 
+	    STUDENT B ON (A.MEM_NO = B.SMEM_NO)
+	JOIN
+	    MEMBER D ON (C.COUNS_PRO = D.MEM_NO) 
+	JOIN
+	    STATUS E ON (C.COUNS_STATUS=E.STATUS_CODE)
+	LEFT OUTER JOIN
+	    REJECT F ON (C.COUNS_REJECT = F.REJECT_CODE)
+    JOIN
+        PROFESSOR G ON (C.COUNS_PRO = G.PMEM_NO)
+    JOIN 
+        DEPARTMENT H ON (G.DEPT_CODE=H.DEPT_CODE)
+	WHERE 
+	    A.MEM_NO = #{memNo}
+	GROUP BY 
+	    A.MEM_NAME,
+	    D.MEM_NAME,
+	    C.COUNS_APPNO,
+	    C.COUNS_NO,
+	    C.COUNS_REASON, 
+	    C.COUNS_CONTENT,
+	    C.COUNS_METHOD,
+	    C.COUNS_STATUS,
+	    E.STATUS_NM,
+	    C.COUNS_DATETIME, 
+	    C.COUNS_TYPE, 
+	    C.COUNS_REJECT,
+	    F.REJECT_REASON,
+	    C.COUNS_PRO,
+	    C.COUNS_NOTICE,
+	    C.MEM_NO,
+        H.DEPT_NAME
+	ORDER BY 
+	    C.COUNS_DATETIME
+</select>
+<select id="scholaList" parameterType="String" resultType="ScholashipRecVO">
+	SELECT    
+	    E.schol_no,
+	    E.schol_code,
+	    E.schol_date,
+	    E.year_semester,
+	    F.schol_name,
+	    F.schol_criteria,
+	    F.schol_dm,
+	    TO_CHAR(F.schol_amt,'FM999,999,999')AS schol_amt,
+	    F.schol_rp
+	FROM
+	    SCHOLASHIP_REC E 
+	JOIN 
+	    MEMBER A  ON (A.MEM_NO = E.SMEM_NO)
+	JOIN 
+	    SCHOLASHIP F ON (E.SCHOL_CODE = F.schol_code)
+	WHERE 
+	    A.MEM_NO = #{memNo}
+	GROUP BY    
+	    E.schol_no,
+	    E.schol_code,
+	    E.schol_date,
+	    E.year_semester,
+	    F.schol_name,
+	    F.schol_criteria,
+	    F.schol_dm,
+	    F.schol_amt,
+	    F.schol_rp
+</select>
+<select id="enrollList" parameterType="String" resultType="EnrollInvoiceVO">
+	SELECT
+		ROWNUM RNUM,
+	    A.enrl_no,
+	    A.enrl_code,
+	    A.enrl_deadline,
+	    A.enrl_bank,
+	    A.enrl_account,
+	    A.schol_code,
+	    A.smem_no,
+	    A.year,
+	    A.semester,
+	    C.ENRL_REC,
+	    C.ENRL_DATE,
+	    D.DEPT_CODE,
+	    F.DEPT_NAME,
+	    TO_CHAR(D.ENRL_MF,'FM999,999,999')AS ENRL_MF,
+	    TO_CHAR(D.ENRL_TF,'FM999,999,999') AS ENRL_TF,
+	    TO_CHAR(D.ENRL_IF,'FM999,999,999') AS ENRL_IF,
+	    TO_CHAR(D.ENRL_MC,'FM999,999,999') AS ENRL_MC,
+	    TO_CHAR(D.ENRL_TOTAL,'FM999,999,999') AS ENRL_TOTAL,
+	    E.SCHOL_NAME,
+	    TO_CHAR(E.SCHOL_AMT,'FM999,999,999') AS AMT,
+	    TO_CHAR((D.ENRL_TOTAL - E.SCHOL_AMT),'FM999,999,999') AS REAL
+	FROM
+	    enroll_invoice A
+	JOIN 
+	    MEMBER B ON A.SMEM_NO = B.MEM_NO
+	JOIN 
+	    ENROLL_RECORD C ON A.ENRL_NO=C.ENRL_NO
+	JOIN
+	    ENROLLFEE D ON A.ENRL_CODE = D.ENRL_CODE
+	JOIN 
+	    SCHOLASHIP E ON A.SCHOL_CODE = E.SCHOL_CODE
+	JOIN
+	    DEPARTMENT F ON D.DEPT_CODE = F.DEPT_CODE
+	WHERE 
+	    B.MEM_NO =#{memNo}
+</select>
+
+<select id="academicList" parameterType="String" resultType="AcademicRecordChangeVO">
+	SELECT
+	    A.arc_no,
+	    A.ac_code,
+	    C.AC_NAME,
+	    A.arc_reason,
+	    A.arc_start,
+	    A.arc_end,
+	    A.mem_no,
+	    A.arc_state,
+	    D.STATUS_NM,
+	    A.gf_no,
+	    A.arc_date
+	FROM
+	    academic_record_change A
+	JOIN 
+	    MEMBER B ON A.MEM_NO = B.MEM_NO
+	JOIN 
+	    academic_classification C ON A.AC_CODE = C.AC_CODE
+	JOIN
+	    STATUS D ON A.ARC_STATE=D.STATUS_CODE
+	WHERE
+	    A.MEM_NO=#{memNo}
+	AND
+	   A.ARC_STATE='STA06'
+</select>
+</mapper>

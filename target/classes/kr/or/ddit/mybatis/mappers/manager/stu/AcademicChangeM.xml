@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.manager.stu.academicchange.dao.AcademicChangeDAOM">
+	<resultMap type="AcademicRecordChangeVO" id="recordList" autoMapping="true">
+		<id property = "arcNo" column="ARC_NO"/>
+		<association property="acaCla" javaType="hashmap">
+			<result property="acCode" column="AC_CODE"/>
+			<result property="acName" column="AC_NAME"/>
+		</association>
+		<association property="status" javaType="hashmap">
+			<result property="statusNm" column="STATUS_NM"/>
+			<result property="statusCode" column="STATUS_CODE"/>
+		</association>
+		<association property="reject" javaType="hashmap">
+        	<result property="rejectCode" column="REJECT_CODE"/>
+        	<result property="rejectReason" column="REJECT_REASON"/>
+    	</association>
+    	<collection property="fileList" javaType="list" ofType="FileVO" autoMapping="true">
+			<id property="fileNo" column="file_no"/>
+		</collection>
+	</resultMap>
+<select id="selectAcaRecordList" resultMap="recordList">
+			SELECT 
+				ARC.ARC_NO, ARC.AC_CODE, ARC.ARC_REASON
+				, ARC.MEM_NO, ARC.ARC_STATE, ARC.ARC_REJECT
+				, ARC.GF_NO, ARC.ARC_DATE
+				, AC.AC_NAME
+			FROM 
+				ACADEMIC_RECORD_CHANGE ARC
+			LEFT JOIN ACADEMIC_CLASSIFICATION AC ON AC.AC_CODE = ARC.AC_CODE
+			WHERE ARC.ARC_STATE = 'STA02'
+			order by AC.AC_NAME
+</select>
+<select id="select" resultMap="recordList" parameterType="String">
+	SELECT 
+	    ARC.ARC_NO, ARC.MEM_NO,ARC.ARC_DATE, ARC.GF_NO, ARC.AC_CODE,
+	    M.MEM_NAME,
+	    AC.AC_NAME,
+	    ARC.ARC_REASON, ARC.ARC_START, ARC.ARC_END, S.STATUS_CODE
+	    ,F.file_no,F.file_nm,F.file_save,F.mime,F.file_size,F.fancy_size,F.gf_no
+	FROM 
+	    ACADEMIC_RECORD_CHANGE ARC
+    LEFT OUTER JOIN 
+    	"FILE" F on ARC.gf_no = F.gf_no
+	INNER JOIN 
+	    ACADEMIC_CLASSIFICATION AC ON ARC.AC_CODE = AC.AC_CODE
+	INNER JOIN
+	    MEMBER M ON ARC.MEM_NO = M.MEM_NO
+    LEFT OUTER JOIN
+        STATUS S ON ARC.ARC_STATE = S.STATUS_CODE
+	WHERE
+    		ARC.ARC_NO = #{arcNo}
+</select>
+<update id="update" parameterType="AcademicRecordChangeVO">
+		UPDATE ACADEMIC_RECORD_CHANGE
+		SET 
+		    ARC_STATE = #{arcState,jdbcType=VARCHAR},
+			ARC_REJECT = #{arcReject,jdbcType=VARCHAR}
+		WHERE 
+		    ARC_NO = #{arcNo}
+	</update>
+</mapper>
